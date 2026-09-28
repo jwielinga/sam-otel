@@ -5,8 +5,11 @@
   "description": "Lightweight browser SDK for sending OpenTelemetry logs over OTLP/HTTP",
   "type": "module",
   "packageManager": "pnpm@8.6.12",
+  "author": "J Wielinga",
+  "license": "EUPL-1.2",
   "files": [
     "dist",
+    "LICENSE.txt",
     "README.md",
     "docs"
   ],
