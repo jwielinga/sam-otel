@@ -1,0 +1,40 @@
+{
+  "name": "sam",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lightweight browser SDK for sending OpenTelemetry logs over OTLP/HTTP",
+  "type": "module",
+  "packageManager": "pnpm@8.6.12",
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "sideEffects": false,
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/sam.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.70.1",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.2"
+  }
+}
