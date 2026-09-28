@@ -4,7 +4,7 @@ Sam is a browser-side TypeScript SDK that sends OpenTelemetry log records to an 
 
 ## Install
 
-Sam is private and not published to the npm registry yet. To try it from a local checkout:
+Sam's npm package name is `sam-otel`. Until its first release is published, try it from a local checkout:
 
 1. Build the package in the Sam repository:
 
@@ -13,24 +13,28 @@ Sam is private and not published to the npm registry yet. To try it from a local
    pnpm build
    ```
 
-2. From the consuming application, add the local repository path. For a sibling app and `sam` checkout:
+2. From the consuming application, add the local repository path. For a sibling app and `sam-otel` checkout:
 
    ```sh
-   pnpm add ../sam
+
    ```
 
-After Sam is published, install the published package with:
+pnpm add ../sam-otel
+
+````
+
+After the first release, install the published package with:
 
 ```sh
-pnpm add sam
-```
+pnpm add sam-otel
+````
 
 ## Configure
 
 Pass the complete OTLP/HTTP logs URL to `endpoint`; Sam does not append `/v1/logs` for you.
 
 ```ts
-import { createSamLogger } from 'sam'
+import { createSamLogger } from 'sam-otel'
 
 const logger = createSamLogger({
   endpoint: 'https://collector.example.com/v1/logs',
@@ -80,7 +84,7 @@ Each call returns a `Promise<void>`. Await it when the caller needs to observe e
 Use `logRecord()` when a record needs explicit timestamps, OTel severity number/text, trace/span correlation, flags, dropped-attribute count, or event name:
 
 ```ts
-import { OTelSeverityNumber } from 'sam'
+import { OTelSeverityNumber } from 'sam-otel'
 
 await logger.logRecord({
   timeUnixNano: BigInt(Date.now()) * 1_000_000n,

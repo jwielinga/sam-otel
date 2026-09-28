@@ -4,7 +4,7 @@
 
 Sam is a browser-first TypeScript npm package for sending OpenTelemetry logs to an OTLP/HTTP collector. This repository is a library, not a UI application. Do not add app pages, UI components, or demo-site scaffolding unless requested.
 
-The package remains private during development. Keep `private: true` until publication is explicitly approved.
+The package is prepared for public npm releases as `sam-otel`. Releases run through semantic-release on `main` after the repository's npm Trusted Publisher and branch protection are configured.
 
 ## Implementation
 
