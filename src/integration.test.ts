@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OtlpExportError } from './http-exporter.js'
 import type { OTelAnyValue } from './otel.types.js'
 import type { OtlpLogRecord } from './otlp.js'
-import { createSamLogger, type SamLogger } from './sdk.js'
+import { createSamLogger } from './sdk.js'
+import type { SamLogger } from './logger.js'
 import type { SamDiagnosticEvent, SamLoggerOptions } from './sdk.types.js'
 import {
   FakeCollector,

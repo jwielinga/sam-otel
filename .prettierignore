@@ -1,3 +1,5 @@
 dist
 node_modules
 pnpm-lock.yaml
+website/build
+website/.docusaurus

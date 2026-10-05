@@ -1,0 +1,89 @@
+---
+sidebar_position: 2
+title: Getting started
+---
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+
+# Getting started
+
+## Install
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+
+```sh
+pnpm add sam-otel
+```
+
+  </TabItem>
+  <TabItem value="npm" label="npm">
+
+```sh
+npm install sam-otel
+```
+
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+
+```sh
+yarn add sam-otel
+```
+
+  </TabItem>
+</Tabs>
+
+:::note Before the first release
+
+If `sam-otel` is not on npm yet, build it from a checkout and add the local path. From the Sam repository run `pnpm install && pnpm build`, then in your app run `pnpm add ../sam-otel` (adjust the path).
+
+:::
+
+Sam is published as an ES module with bundled TypeScript types. It needs a runtime with the Fetch API, which every current browser provides. It also runs on Node.js 20.19+ or 22.12+ when you want to send logs from scripts or tests.
+
+## Send your first log
+
+Create one logger for your app and reuse it:
+
+```ts title="logger.ts"
+import { createSamLogger } from 'sam-otel'
+
+export const logger = createSamLogger({
+  endpoint: 'https://collector.example.com/v1/logs',
+  serviceName: 'web-app',
+  serviceVersion: '1.0.0',
+})
+```
+
+```ts
+import { logger } from './logger'
+
+await logger.info('User signed in', { userId: 'user-123' })
+```
+
+- `endpoint` is the complete OTLP/HTTP logs URL. Sam does not append `/v1/logs` for you.
+- `serviceName` becomes the `service.name` resource attribute that identifies your app in the backend.
+- Each log call returns a `Promise<void>` that settles when the batch containing the record has been exported.
+
+By default Sam sends a batch when 20 records are queued or 5 seconds after the first queued record, whichever comes first.
+
+## Flush before you stop
+
+Queued records are held in memory. Call `shutdown()` when a logger is no longer needed so nothing is left behind:
+
+```ts
+await logger.shutdown()
+```
+
+In a browser, Sam also flushes automatically when the page is hidden or unloaded, so most apps never call `shutdown()`. See [Page unload](./guides/page-unload.md).
+
+## Make sure the collector accepts browser requests
+
+Browsers enforce CORS. If your collector does not allow your site's origin, requests fail before any log arrives. The [Collector setup](./guides/collector-setup.md) guide has a ready-to-use OpenTelemetry Collector configuration.
+
+## Next steps
+
+- [Configuration](./guides/configuration.md): required options, headers, and resource attributes.
+- [Writing logs](./guides/writing-logs.md): severities, attributes, and raw OTLP records.
+- [Recipes](./guides/recipes.md): a shared logger module, capturing uncaught errors, and fire-and-forget logging.

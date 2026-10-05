@@ -17,7 +17,7 @@ import type {
   TraceContextProvider,
 } from './sdk.types.js'
 
-export type LogLoggerOptions = {
+export type SamLoggerInit = {
   limits?: OtlpLimits
   traceContext?: TraceContextProvider
   onShutdown?: () => void
@@ -25,17 +25,14 @@ export type LogLoggerOptions = {
 
 const TRACE_FLAGS_MASK = 0xff
 
-export class LogLogger {
+export class SamLogger {
   private readonly batcher: LogBatcher<OtlpLogRecord>
   private readonly limits: OtlpLimits
   private readonly traceContext: TraceContextProvider | undefined
   private readonly onShutdown: (() => void) | undefined
   private isShutdown = false
 
-  constructor(
-    batcher: LogBatcher<OtlpLogRecord>,
-    options: LogLoggerOptions = {},
-  ) {
+  constructor(batcher: LogBatcher<OtlpLogRecord>, options: SamLoggerInit = {}) {
     this.batcher = batcher
     this.limits = options.limits ?? DEFAULT_LIMITS
     this.traceContext = options.traceContext

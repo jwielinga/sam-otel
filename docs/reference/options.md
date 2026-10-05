@@ -1,0 +1,119 @@
+---
+sidebar_position: 1
+title: Options
+---
+
+# Options
+
+All options are fields of `SamLoggerOptions`, passed to `createSamLogger()`.
+
+```ts
+import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
+```
+
+## Required
+
+| Option        | Type     | Description                                                     |
+| ------------- | -------- | --------------------------------------------------------------- |
+| `endpoint`    | `string` | Complete OTLP/HTTP logs URL. Sam adds no path. Cannot be empty. |
+| `serviceName` | `string` | Becomes the `service.name` resource attribute. Cannot be empty. |
+
+## Identity and request
+
+| Option               | Type                     | Default            | Description                                                                           |
+| -------------------- | ------------------------ | ------------------ | ------------------------------------------------------------------------------------- |
+| `serviceVersion`     | `string`                 | unset              | `service.version` resource attribute.                                                 |
+| `resourceAttributes` | `LogAttributes`          | `{}`               | Extra resource attributes. See [Resource and scope](../guides/resource-and-scope.md). |
+| `headers`            | `Record<string, string>` | `{}`               | Extra request headers, such as `Authorization`.                                       |
+| `fetcher`            | `typeof fetch`           | `globalThis.fetch` | Replacement `fetch`, for tests or custom environments.                                |
+
+## Batching
+
+`batch` is an object of `SamLoggerBatchOptions`. See [Batching and flushing](../guides/batching.md).
+
+| Field              | Type                            | Default        | Description                                      |
+| ------------------ | ------------------------------- | -------------- | ------------------------------------------------ |
+| `maxBatchSize`     | `number`                        | `20`           | Records per request. Positive integer.           |
+| `maxQueueSize`     | `number`                        | `1000`         | Records waiting to be sent. Positive integer.    |
+| `scheduledDelayMs` | `number`                        | `5000`         | Timer delay in ms, between `0` and `2147483647`. |
+| `overflowStrategy` | `'reject-new' \| 'drop-oldest'` | `'reject-new'` | What to drop when the queue is full.             |
+
+## Delivery
+
+| Option      | Type                             | Default   | Description                                                                                          |
+| ----------- | -------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `keepalive` | `boolean`                        | `true`    | Set the Fetch `keepalive` flag when the browser supports it. [Page unload](../guides/page-unload.md) |
+| `timeoutMs` | `number`                         | `10000`   | Per-attempt timeout in ms. `0` disables. [Retries and timeouts](../guides/retries-and-timeouts.md)   |
+| `retry`     | `SamLoggerRetryOptions \| false` | see below | Retry policy. `false` makes one attempt.                                                             |
+
+`retry` fields, all optional:
+
+| Field               | Default | Description                                            |
+| ------------------- | ------- | ------------------------------------------------------ |
+| `maxAttempts`       | `3`     | Total attempts including the first.                    |
+| `initialDelayMs`    | `1000`  | Base backoff delay.                                    |
+| `maxDelayMs`        | `30000` | Backoff cap, and the longest `Retry-After` Sam honors. |
+| `backoffMultiplier` | `2`     | Growth factor per retry.                               |
+
+## Payload
+
+| Option              | Type               | Default           | Description                                                                  |
+| ------------------- | ------------------ | ----------------- | ---------------------------------------------------------------------------- |
+| `detectResource`    | `boolean`          | `true`            | Add `telemetry.sdk.*`, `user_agent.original`, and `browser.*` attributes.    |
+| `scope`             | `SamLoggerScope`   | `{ name: 'sam' }` | Instrumentation scope. [Resource and scope](../guides/resource-and-scope.md) |
+| `resourceSchemaUrl` | `string`           | unset             | Schema URL for the resource.                                                 |
+| `compression`       | `'none' \| 'gzip'` | `'none'`          | Gzip request bodies. [Compression](../guides/compression.md)                 |
+| `limits`            | `SamLoggerLimits`  | see below         | Attribute limits. [Attribute limits](../guides/attribute-limits.md)          |
+
+`scope` fields, all optional: `name` (default `'sam'`), `version`, `attributes`, `schemaUrl`.
+
+`limits` fields, all optional:
+
+| Field                       | Default    | Description                      |
+| --------------------------- | ---------- | -------------------------------- |
+| `attributeCountLimit`       | `128`      | Maximum attributes per record.   |
+| `attributeValueLengthLimit` | `Infinity` | Maximum string attribute length. |
+| `maxValueDepth`             | `20`       | Maximum nesting depth of values. |
+
+## Correlation and observability
+
+| Option         | Type                                  | Default | Description                                                                                           |
+| -------------- | ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `traceContext` | `() => TraceContext \| undefined`     | unset   | Supplies trace ids for every log. [Trace correlation](../guides/trace-correlation.md)                 |
+| `onDiagnostic` | `(event: SamDiagnosticEvent) => void` | unset   | Observe failed exports, partial success, and dropped records. [Diagnostics](../guides/diagnostics.md) |
+
+## Full example
+
+```ts
+const logger = createSamLogger({
+  endpoint: 'https://collector.example.com/v1/logs',
+  serviceName: 'storefront',
+  serviceVersion: '2.1.0',
+  resourceAttributes: { 'deployment.environment.name': 'production' },
+  headers: { Authorization: `Bearer ${token}` },
+  batch: {
+    maxBatchSize: 50,
+    maxQueueSize: 1_000,
+    scheduledDelayMs: 2_000,
+    overflowStrategy: 'drop-oldest',
+  },
+  keepalive: true,
+  timeoutMs: 10_000,
+  retry: {
+    maxAttempts: 3,
+    initialDelayMs: 1_000,
+    maxDelayMs: 30_000,
+    backoffMultiplier: 2,
+  },
+  detectResource: true,
+  scope: { name: 'storefront-web', version: '2.1.0' },
+  compression: 'gzip',
+  limits: {
+    attributeCountLimit: 128,
+    attributeValueLengthLimit: 4096,
+    maxValueDepth: 20,
+  },
+  traceContext: () => activeTrace(),
+  onDiagnostic: (event) => console.warn(event),
+})
+```

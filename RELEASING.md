@@ -10,6 +10,7 @@ Releases are created by semantic-release after a quality check on `main`. Conven
 4. Set the repository's default branch to `main`. Under Settings > Actions > General, restrict workflow permissions to read-only by default and allow only the actions this project uses.
 5. Add a branch ruleset for `main`: require pull requests, require the `Quality / quality` status check, block force pushes and branch deletion, and prevent bypass where practical. Require at least one approval when another maintainer is available.
 6. Enable private vulnerability reporting, secret scanning and push protection, Dependabot alerts, and Dependabot security updates in repository settings. Confirm workflow files and `SECURITY.md` are visible after the repository becomes public.
+7. For the documentation site, open Settings > Pages and set **Source** to **GitHub Actions**. The Docs workflow (`.github/workflows/docs.yml`) then builds `website/` and deploys it to `https://jwielinga.github.io/sam-otel/` on every push to `main` that changes `docs/` or `website/`. If the owner or repository name changes, update `url`, `baseUrl`, `organizationName`, and `projectName` in `website/docusaurus.config.ts`. The deploy job is the only one with `pages: write`; pull requests only build the site.
 
 ## Release Behavior
 

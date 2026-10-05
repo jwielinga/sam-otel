@@ -1,6 +1,6 @@
 import { LogBatcher } from './batcher.js'
 import { isFetchKeepaliveSupported, OtlpHttpExporter } from './http-exporter.js'
-import { LogLogger } from './logger.js'
+import { SamLogger } from './logger.js'
 import { resolveLimits, type OtlpLogRecord } from './otlp.js'
 import { detectResourceAttributes } from './resource.js'
 import { resolveRetryPolicy } from './retry.js'
@@ -114,25 +114,19 @@ function createRuntime(options: SamLoggerOptions): Runtime {
   }
 }
 
-export class SamLogger extends LogLogger {
-  constructor(options: SamLoggerOptions) {
-    if (!options.endpoint.trim()) {
-      throw new TypeError('endpoint must be a non-empty string.')
-    }
-    if (!options.serviceName.trim()) {
-      throw new TypeError('serviceName must be a non-empty string.')
-    }
-
-    const runtime = createRuntime(options)
-
-    super(runtime.batcher, {
-      limits: resolveLimits(options.limits),
-      traceContext: options.traceContext,
-      onShutdown: runtime.dispose,
-    })
-  }
-}
-
 export function createSamLogger(options: SamLoggerOptions): SamLogger {
-  return new SamLogger(options)
+  if (!options.endpoint.trim()) {
+    throw new TypeError('endpoint must be a non-empty string.')
+  }
+  if (!options.serviceName.trim()) {
+    throw new TypeError('serviceName must be a non-empty string.')
+  }
+
+  const runtime = createRuntime(options)
+
+  return new SamLogger(runtime.batcher, {
+    limits: resolveLimits(options.limits),
+    traceContext: options.traceContext,
+    onShutdown: runtime.dispose,
+  })
 }

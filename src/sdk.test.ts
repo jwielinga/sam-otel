@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSamLogger, SamLogger } from './sdk.js'
+import { createSamLogger } from './sdk.js'
+import type { SamLogger } from './logger.js'
 import { OTelSeverityNumber } from './otel.types.js'
 import type { SamLoggerOptions } from './sdk.types.js'
 
@@ -166,26 +167,9 @@ describe('SDK factory', () => {
   it('fails fast when no fetch implementation is available', () => {
     vi.stubGlobal('fetch', undefined)
 
-    expect(
-      () => new SamLogger({ endpoint: '/v1/logs', serviceName: 'checkout' }),
+    expect(() =>
+      createSamLogger({ endpoint: '/v1/logs', serviceName: 'checkout' }),
     ).toThrow('fetch is not available in this environment')
-  })
-
-  it('supports direct SamLogger construction', async () => {
-    let exported = false
-    const logger = new SamLogger({
-      endpoint: '/v1/logs',
-      serviceName: 'checkout',
-      batch: { maxBatchSize: 1 },
-      fetcher: async () => {
-        exported = true
-        return new Response(null, { status: 204 })
-      },
-    })
-
-    await logger.info('direct construction')
-
-    expect(exported).toBe(true)
   })
 
   describe('keepalive', () => {

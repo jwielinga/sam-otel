@@ -24,9 +24,7 @@ Failed exports are retried (network errors, timeouts, and HTTP 429/502/503/504, 
 
 Log `Error` objects directly, add trace correlation with `traceContext` or per-call options, and choose gzip compression, instrumentation scope, schema URLs, and attribute limits. Sam adds browser resource attributes by default; set `detectResource: false` to turn that off.
 
-`new SamLogger(options)` remains available for callers that prefer class construction.
-
-See the [user guide](docs/usage.md) for installation, configuration, browser CORS, error handling, and current transport limits.
+See the [documentation site](https://jwielinga.github.io/sam-otel/) for installation, configuration, every option, browser CORS, error handling, and current limits. The Markdown sources are in [docs](docs).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development and commit conventions, and [RELEASING.md](RELEASING.md) for the one-time GitHub and npm setup.
 
@@ -48,6 +46,14 @@ pnpm lint
 pnpm typecheck
 pnpm build
 pnpm check
+```
+
+The documentation site is a Docusaurus project in `website/` that renders the Markdown in `docs/`. It has its own dependencies:
+
+```sh
+pnpm --dir website install
+pnpm docs:start   # live preview
+pnpm docs:build   # production build into website/build
 ```
 
 ## License

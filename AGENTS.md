@@ -14,9 +14,11 @@ The package is prepared for public npm releases as `sam-otel`. Releases run thro
 - Non-success HTTP responses reject each affected log promise.
 - Preserve OTLP log severity and resource fields when changing serialization.
 - Update tests and README when public API behavior changes.
+- Update the guides in `docs/` (Docusaurus pages) when public API or behavior changes. `website/` only holds the Docusaurus app; write documentation in `docs/`.
 
 ## Development
 
 - Use pnpm for package management.
 - Run `pnpm check` before considering changes complete.
+- When you change `docs/` or `website/`, also run `pnpm docs:build`; broken links fail the build. The Docs workflow publishes the site to GitHub Pages from `main`.
 - Inject `fetcher` in tests; do not require a live collector for unit tests.

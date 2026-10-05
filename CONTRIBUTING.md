@@ -22,3 +22,15 @@ Use Conventional Commits because semantic-release derives package versions and r
 - `feat!: change logger configuration` or a `BREAKING CHANGE:` footer produces a major release.
 
 Documentation-only and maintenance changes can use `docs:`, `test:`, `build:`, or `chore:`; those do not publish a release by themselves.
+
+## Documentation
+
+The user documentation lives in `docs/` as Markdown and is rendered by the Docusaurus app in `website/`. Update the matching page whenever public API or behavior changes. To preview and verify:
+
+```sh
+pnpm --dir website install --frozen-lockfile
+pnpm docs:start
+pnpm docs:build
+```
+
+`pnpm docs:build` fails on broken links. The Docs workflow builds the site on pull requests and publishes it to GitHub Pages from `main`.
