@@ -69,11 +69,9 @@ function fitsKeepaliveLimit(body: Body): boolean {
   if (typeof body !== 'string') {
     return body.byteLength <= KEEPALIVE_MAX_BODY_BYTES
   }
+  // UTF-8 is never shorter than the UTF-16 length, so skip encoding huge bodies.
   if (body.length > KEEPALIVE_MAX_BODY_BYTES) return false
-  return (
-    typeof TextEncoder !== 'undefined' &&
-    new TextEncoder().encode(body).length <= KEEPALIVE_MAX_BODY_BYTES
-  )
+  return new TextEncoder().encode(body).length <= KEEPALIVE_MAX_BODY_BYTES
 }
 
 function httpError(response: Response): OtlpExportError {
@@ -229,14 +227,13 @@ export class OtlpHttpExporter {
     const controller = this.timeoutMs > 0 ? new AbortController() : undefined
     // Detach from `this`: browser fetch throws "Illegal invocation" as a method.
     const fetcher = this.fetcher
-    const request = (async () =>
-      fetcher(this.endpoint, {
-        method: 'POST',
-        headers: this.headersFor(payload),
-        body: payload.body,
-        ...(keepalive ? { keepalive: true } : {}),
-        ...(controller ? { signal: controller.signal } : {}),
-      }))()
+    const request = fetcher(this.endpoint, {
+      method: 'POST',
+      headers: this.headersFor(payload),
+      body: payload.body,
+      ...(keepalive ? { keepalive: true } : {}),
+      ...(controller ? { signal: controller.signal } : {}),
+    })
 
     if (!controller) return request
     return raceTimeout(

@@ -3,7 +3,6 @@ import type { SamLoggerBatchOptions } from './sdk.types.js'
 const DEFAULT_MAX_BATCH_SIZE = 20
 const DEFAULT_MAX_QUEUE_SIZE = 1_000
 const DEFAULT_SCHEDULED_DELAY_MS = 5_000
-const MAX_TIMER_DELAY_MS = 2_147_483_647
 
 type PendingItem<T> = {
   item: T
@@ -34,34 +33,12 @@ export class LogBatcher<T> {
   private totalDropped = 0
 
   constructor(options: LogBatcherOptions<T>) {
-    const maxBatchSize = options.maxBatchSize ?? DEFAULT_MAX_BATCH_SIZE
-    const maxQueueSize = options.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE
-    const scheduledDelayMs =
+    this.maxBatchSize = options.maxBatchSize ?? DEFAULT_MAX_BATCH_SIZE
+    this.maxQueueSize = options.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE
+    this.flushThreshold = Math.min(this.maxBatchSize, this.maxQueueSize)
+    this.scheduledDelayMs =
       options.scheduledDelayMs ?? DEFAULT_SCHEDULED_DELAY_MS
-
-    if (!Number.isInteger(maxBatchSize) || maxBatchSize < 1) {
-      throw new TypeError('batch.maxBatchSize must be a positive integer.')
-    }
-    if (!Number.isInteger(maxQueueSize) || maxQueueSize < 1) {
-      throw new TypeError('batch.maxQueueSize must be a positive integer.')
-    }
-    if (
-      !Number.isFinite(scheduledDelayMs) ||
-      scheduledDelayMs < 0 ||
-      scheduledDelayMs > MAX_TIMER_DELAY_MS
-    ) {
-      throw new TypeError(
-        `batch.scheduledDelayMs must be between 0 and ${MAX_TIMER_DELAY_MS}.`,
-      )
-    }
-
-    const overflowStrategy = options.overflowStrategy ?? 'reject-new'
-
-    this.maxBatchSize = maxBatchSize
-    this.maxQueueSize = maxQueueSize
-    this.flushThreshold = Math.min(maxBatchSize, maxQueueSize)
-    this.scheduledDelayMs = scheduledDelayMs
-    this.overflowStrategy = overflowStrategy
+    this.overflowStrategy = options.overflowStrategy ?? 'reject-new'
     this.sendBatch = options.sendBatch
     this.sendBatchOnUnload = options.sendBatchOnUnload ?? options.sendBatch
     this.onDropped = options.onDropped
@@ -80,12 +57,7 @@ export class LogBatcher<T> {
         this.recordDrop()
         return Promise.reject(new Error('SamLogger batch queue is full.'))
       }
-
-      const oldest = this.pendingItems.shift()
-      this.recordDrop()
-      oldest?.reject(
-        new Error('SamLogger batch queue is full; oldest record dropped.'),
-      )
+      this.dropOldest()
     }
 
     const itemPromise = new Promise<void>((resolve, reject) => {
@@ -178,6 +150,14 @@ export class LogBatcher<T> {
     this.isShutdown = true
     this.clearFlushTimer()
     return this.flush()
+  }
+
+  private dropOldest(): void {
+    const oldest = this.pendingItems.shift()
+    this.recordDrop()
+    oldest?.reject(
+      new Error('SamLogger batch queue is full; oldest record dropped.'),
+    )
   }
 
   private recordDrop(): void {

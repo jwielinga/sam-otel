@@ -62,27 +62,32 @@ export class SamLogger {
   }
 
   logRecord(record: OTelLogRecord): Promise<void> {
-    return this.enqueueRecord(() => {
-      const context =
-        record.traceId === undefined && record.spanId === undefined
-          ? this.traceContext?.()
-          : undefined
-
-      return encodeOtlpLogRecord(
+    return this.enqueueRecord(() =>
+      encodeOtlpLogRecord(
         {
-          ...record,
+          ...this.withTraceContext(record),
           observedTimeUnixNano: record.observedTimeUnixNano ?? nowUnixNano(),
-          ...(context === undefined
-            ? {}
-            : {
-                traceId: context.traceId,
-                spanId: context.spanId,
-                flags: record.flags ?? toFlags(context.traceFlags),
-              }),
         },
         this.limits,
-      )
-    })
+      ),
+    )
+  }
+
+  // Fills trace fields from the provider unless the record carries its own.
+  private withTraceContext(record: OTelLogRecord): OTelLogRecord {
+    if (record.traceId !== undefined || record.spanId !== undefined) {
+      return record
+    }
+
+    const context = this.traceContext?.()
+    if (context === undefined) return record
+
+    return {
+      ...record,
+      traceId: context.traceId,
+      spanId: context.spanId,
+      flags: record.flags ?? toFlags(context.traceFlags),
+    }
   }
 
   private resolveExtras(options: LogOptions | undefined): OtlpRecordExtras {

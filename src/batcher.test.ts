@@ -71,12 +71,6 @@ describe('LogBatcher', () => {
     expect(batches).toEqual([['custom delay']])
   })
 
-  it('rejects timer delays above the platform limit', () => {
-    expect(() => setup({ scheduledDelayMs: 2_147_483_648 })).toThrow(
-      'batch.scheduledDelayMs must be between 0 and 2147483647.',
-    )
-  })
-
   it('caps batches and preserves order while a send is in flight', async () => {
     let notifyRequestStarted!: () => void
     let releaseRequest!: () => void

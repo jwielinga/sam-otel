@@ -146,53 +146,61 @@ function encodeValue(
 
   if (value instanceof Uint8Array) return { bytesValue: encodeBytes(value) }
 
-  if (value instanceof Error) {
-    const { type, message, stacktrace } = describeError(value)
-    const fields: Array<[string, string]> = [
-      ['type', type],
-      ['message', message],
-    ]
-    if (stacktrace !== undefined) fields.push(['stacktrace', stacktrace])
-    return {
-      kvlistValue: {
-        values: fields.map(([fieldKey, text]) => ({
-          key: fieldKey,
-          value: { stringValue: truncate(text, context.stringLimit) },
-        })),
-      },
-    }
-  }
+  if (value instanceof Error) return encodeError(value, context)
 
   if (depth >= context.maxDepth) return { stringValue: '[MaxDepthExceeded]' }
   if (context.ancestors.includes(value)) return { stringValue: '[Circular]' }
 
   context.ancestors.push(value)
   try {
-    if (Array.isArray(value)) {
-      return {
-        arrayValue: {
-          values: value.map((item) =>
-            encodeValue(item, key, context, depth + 1),
-          ),
-        },
-      }
-    }
-
-    return {
-      kvlistValue: {
-        values: Object.entries(value).map(([nestedKey, nestedValue]) => ({
-          key: nestedKey,
-          value: encodeValue(
-            nestedValue,
-            `${key}.${nestedKey}`,
-            context,
-            depth + 1,
-          ),
-        })),
-      },
-    }
+    return encodeContainer(value, key, context, depth)
   } finally {
     context.ancestors.pop()
+  }
+}
+
+function encodeError(error: Error, context: EncodeContext): OTelJsonAnyValue {
+  const { type, message, stacktrace } = describeError(error)
+  const fields = Object.entries({ type, message, stacktrace }).flatMap(
+    ([fieldKey, text]) =>
+      text === undefined
+        ? []
+        : [
+            {
+              key: fieldKey,
+              value: { stringValue: truncate(text, context.stringLimit) },
+            },
+          ],
+  )
+  return { kvlistValue: { values: fields } }
+}
+
+function encodeContainer(
+  value: Exclude<LogAttributeValue, string | number | boolean | bigint | Error>,
+  key: string,
+  context: EncodeContext,
+  depth: number,
+): OTelJsonAnyValue {
+  if (Array.isArray(value)) {
+    return {
+      arrayValue: {
+        values: value.map((item) => encodeValue(item, key, context, depth + 1)),
+      },
+    }
+  }
+
+  return {
+    kvlistValue: {
+      values: Object.entries(value).map(([nestedKey, nestedValue]) => ({
+        key: nestedKey,
+        value: encodeValue(
+          nestedValue,
+          `${key}.${nestedKey}`,
+          context,
+          depth + 1,
+        ),
+      })),
+    },
   }
 }
 
@@ -201,10 +209,7 @@ function encodeAttributes(
   limits: OtlpLimits,
 ): { values: OTelJsonKeyValue[]; dropped: number } {
   const entries = Object.entries(attributes)
-  const kept =
-    entries.length > limits.attributeCountLimit
-      ? entries.slice(0, limits.attributeCountLimit)
-      : entries
+  const kept = entries.slice(0, limits.attributeCountLimit)
   const context = createContext(limits, true)
 
   return {
@@ -216,6 +221,29 @@ function encodeAttributes(
   }
 }
 
+// An Error body becomes its message, with the details as exception.* attributes.
+function splitErrorBody(
+  body: LogAttributeValue,
+  attributes: LogAttributes,
+): { bodyValue: LogAttributeValue; recordAttributes: LogAttributes } {
+  if (!(body instanceof Error)) {
+    return { bodyValue: body, recordAttributes: attributes }
+  }
+
+  const { type, message, stacktrace } = describeError(body)
+  return {
+    bodyValue: message || type,
+    recordAttributes: {
+      'exception.type': type,
+      'exception.message': message,
+      ...(stacktrace === undefined
+        ? {}
+        : { 'exception.stacktrace': stacktrace }),
+      ...attributes,
+    },
+  }
+}
+
 export function createOtlpLogRecord(
   severity: LogSeverity,
   body: LogAttributeValue,
@@ -224,22 +252,7 @@ export function createOtlpLogRecord(
   limits: OtlpLimits = DEFAULT_LIMITS,
 ): OtlpLogRecord {
   const now = nowUnixNano().toString()
-  let bodyValue = body
-  let recordAttributes = attributes
-
-  if (body instanceof Error) {
-    const { type, message, stacktrace } = describeError(body)
-    bodyValue = message || type
-    recordAttributes = {
-      'exception.type': type,
-      'exception.message': message,
-      ...(stacktrace === undefined
-        ? {}
-        : { 'exception.stacktrace': stacktrace }),
-      ...attributes,
-    }
-  }
-
+  const { bodyValue, recordAttributes } = splitErrorBody(body, attributes)
   const encoded = encodeAttributes(recordAttributes, limits)
   return {
     timeUnixNano: now,

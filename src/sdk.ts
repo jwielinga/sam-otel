@@ -12,10 +12,7 @@ import type {
 
 const DEFAULT_TIMEOUT_MS = 10_000
 
-type Runtime = {
-  batcher: LogBatcher<OtlpLogRecord>
-  dispose: () => void
-}
+type Emit = (event: SamDiagnosticEvent) => void
 
 function createResourceAttributes(options: SamLoggerOptions): LogAttributes {
   return {
@@ -28,7 +25,20 @@ function createResourceAttributes(options: SamLoggerOptions): LogAttributes {
   }
 }
 
-function createRuntime(options: SamLoggerOptions): Runtime {
+function createEmitter(options: SamLoggerOptions): Emit {
+  return (event) => {
+    try {
+      options.onDiagnostic?.(event)
+    } catch {
+      // A throwing diagnostics callback must not break logging.
+    }
+  }
+}
+
+function createExporter(
+  options: SamLoggerOptions,
+  emit: Emit,
+): OtlpHttpExporter {
   const fetcher = options.fetcher ?? globalThis.fetch
   if (typeof fetcher !== 'function') {
     throw new TypeError(
@@ -36,15 +46,7 @@ function createRuntime(options: SamLoggerOptions): Runtime {
     )
   }
 
-  const emit = (event: SamDiagnosticEvent): void => {
-    try {
-      options.onDiagnostic?.(event)
-    } catch {
-      // A throwing diagnostics callback must not break logging.
-    }
-  }
-
-  const exporter = new OtlpHttpExporter({
+  return new OtlpHttpExporter({
     endpoint: options.endpoint,
     resourceAttributes: createResourceAttributes(options),
     headers: options.headers,
@@ -58,7 +60,13 @@ function createRuntime(options: SamLoggerOptions): Runtime {
     onPartialSuccess: ({ rejectedLogRecords, errorMessage }) =>
       emit({ type: 'partial-success', rejectedLogRecords, errorMessage }),
   })
+}
 
+function createBatcher(
+  options: SamLoggerOptions,
+  exporter: OtlpHttpExporter,
+  emit: Emit,
+): LogBatcher<OtlpLogRecord> {
   const reportFailure = (
     records: readonly OtlpLogRecord[],
     error: unknown,
@@ -67,7 +75,7 @@ function createRuntime(options: SamLoggerOptions): Runtime {
     throw error
   }
 
-  const batcher = new LogBatcher<OtlpLogRecord>({
+  return new LogBatcher<OtlpLogRecord>({
     ...options.batch,
     sendBatch: (records) =>
       exporter
@@ -91,26 +99,27 @@ function createRuntime(options: SamLoggerOptions): Runtime {
     onDropped: (totalDropped) =>
       emit({ type: 'records-dropped', reason: 'queue-full', totalDropped }),
   })
+}
 
+// Returns a function that removes the listeners again.
+function flushOnPageUnload(batcher: LogBatcher<OtlpLogRecord>): () => void {
   const flushOnPageHide = (): void => {
     void batcher.flushOnUnload().catch(() => undefined)
   }
   const flushWhenHidden = (): void => {
     if (document.visibilityState === 'hidden') flushOnPageHide()
   }
+
   globalThis.addEventListener?.('pagehide', flushOnPageHide)
   if (typeof document !== 'undefined') {
     document.addEventListener('visibilitychange', flushWhenHidden)
   }
 
-  return {
-    batcher,
-    dispose: () => {
-      globalThis.removeEventListener?.('pagehide', flushOnPageHide)
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', flushWhenHidden)
-      }
-    },
+  return () => {
+    globalThis.removeEventListener?.('pagehide', flushOnPageHide)
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', flushWhenHidden)
+    }
   }
 }
 
@@ -122,11 +131,13 @@ export function createSamLogger(options: SamLoggerOptions): SamLogger {
     throw new TypeError('serviceName must be a non-empty string.')
   }
 
-  const runtime = createRuntime(options)
+  const emit = createEmitter(options)
+  const exporter = createExporter(options, emit)
+  const batcher = createBatcher(options, exporter, emit)
 
-  return new SamLogger(runtime.batcher, {
+  return new SamLogger(batcher, {
     limits: resolveLimits(options.limits),
     traceContext: options.traceContext,
-    onShutdown: runtime.dispose,
+    onShutdown: flushOnPageUnload(batcher),
   })
 }

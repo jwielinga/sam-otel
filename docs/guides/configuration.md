@@ -91,13 +91,10 @@ It must follow the standard Fetch API signature and return a `Response`. See [Te
 
 Sam validates a few things when you create the logger and throws a `TypeError` immediately:
 
-| Problem                                           | Message                                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------------------- |
-| Empty `endpoint`                                  | `endpoint must be a non-empty string.`                                    |
-| Empty `serviceName`                               | `serviceName must be a non-empty string.`                                 |
-| No global `fetch` and no `fetcher`                | `fetch is not available in this environment; provide the fetcher option.` |
-| `batch.maxBatchSize` not a positive integer       | `batch.maxBatchSize must be a positive integer.`                          |
-| `batch.maxQueueSize` not a positive integer       | `batch.maxQueueSize must be a positive integer.`                          |
-| `batch.scheduledDelayMs` outside `0`–`2147483647` | `batch.scheduledDelayMs must be between 0 and 2147483647.`                |
+| Problem                            | Message                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| Empty `endpoint`                   | `endpoint must be a non-empty string.`                                    |
+| Empty `serviceName`                | `serviceName must be a non-empty string.`                                 |
+| No global `fetch` and no `fetcher` | `fetch is not available in this environment; provide the fetcher option.` |
 
 Other options are not validated at runtime. Rely on the TypeScript types for them.
