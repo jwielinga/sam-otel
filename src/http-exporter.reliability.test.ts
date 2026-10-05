@@ -1,16 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
-import {
-  OtlpExportError,
-  OtlpHttpExporter,
-  type OtlpHttpExporterOptions,
-} from './http-exporter.js'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { OtlpExportError } from './http-exporter.js'
 import type { OtlpLogRecord } from './otlp.js'
+import {
+  createExporter,
+  record,
+  sequenceFetcher,
+} from './test-support/exporter.js'
 
-const record: OtlpLogRecord = {
-  timeUnixNano: '1728000000000000000',
-  severityNumber: 17,
-  body: { stringValue: 'payment failed' },
-}
 const fastRetry = {
   maxAttempts: 3,
   initialDelayMs: 0,
@@ -18,25 +14,10 @@ const fastRetry = {
   backoffMultiplier: 2,
 }
 
-function createExporter(options: Partial<OtlpHttpExporterOptions> = {}) {
-  return new OtlpHttpExporter({
-    endpoint: 'https://collector.example/v1/logs',
-    resourceAttributes: { 'service.name': 'checkout' },
-    fetcher: async () => new Response(null, { status: 204 }),
-    ...options,
-  })
-}
-
-function sequenceFetcher(responses: Array<number | Error>) {
-  const calls: RequestInit[] = []
-  const fetcher: typeof fetch = async (_input, init) => {
-    calls.push(init ?? {})
-    const next = responses[calls.length - 1] ?? 204
-    if (next instanceof Error) throw next
-    return new Response(null, { status: next })
-  }
-  return { calls, fetcher }
-}
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+})
 
 describe('retry', () => {
   it.each([429, 502, 503, 504])(
@@ -72,7 +53,7 @@ describe('retry', () => {
     expect(calls).toHaveLength(3)
   })
 
-  it('retries network errors and keeps the original message', async () => {
+  it('retries network errors', async () => {
     const { calls, fetcher } = sequenceFetcher([
       new TypeError('Failed to fetch'),
       204,
@@ -81,13 +62,15 @@ describe('retry', () => {
 
     await expect(exporter.export([record])).resolves.toBeUndefined()
     expect(calls).toHaveLength(2)
+  })
 
-    const failing = createExporter({
-      fetcher: async () => {
-        throw new TypeError('Failed to fetch')
-      },
-    })
-    const error = await failing.export([record]).catch((e: unknown) => e)
+  it('keeps the original message and cause of a network error', async () => {
+    const { fetcher } = sequenceFetcher([new TypeError('Failed to fetch')])
+
+    const error = await createExporter({ fetcher })
+      .export([record])
+      .catch((e: unknown) => e)
+
     expect((error as Error).message).toBe('Failed to fetch')
     expect((error as Error).cause).toBeInstanceOf(TypeError)
     expect((error as OtlpExportError).retryable).toBe(true)
@@ -100,27 +83,23 @@ describe('retry', () => {
     expect(calls).toHaveLength(1)
   })
 
-  it('honors Retry-After within maxDelayMs and gives up beyond it', async () => {
-    const calls: number[] = []
-    const fetcher: typeof fetch = async () => {
-      calls.push(calls.length)
-      return calls.length === 1
-        ? new Response(null, { status: 429, headers: { 'Retry-After': '0' } })
-        : new Response(null, { status: 204 })
-    }
-    await createExporter({ fetcher, retry: fastRetry }).export([record])
-    expect(calls).toHaveLength(2)
+  it('honors a Retry-After within maxDelayMs', async () => {
+    const { calls, fetcher } = sequenceFetcher([
+      new Response(null, { status: 429, headers: { 'Retry-After': '0' } }),
+    ])
 
-    const slow: typeof fetch = async () => {
-      calls.push(calls.length)
-      return new Response(null, {
-        status: 503,
-        headers: { 'Retry-After': '120' },
-      })
-    }
-    calls.length = 0
+    await createExporter({ fetcher, retry: fastRetry }).export([record])
+
+    expect(calls).toHaveLength(2)
+  })
+
+  it('gives up when Retry-After exceeds maxDelayMs', async () => {
+    const { calls, fetcher } = sequenceFetcher([
+      new Response(null, { status: 503, headers: { 'Retry-After': '120' } }),
+    ])
+
     await expect(
-      createExporter({ fetcher: slow, retry: fastRetry }).export([record]),
+      createExporter({ fetcher, retry: fastRetry }).export([record]),
     ).rejects.toThrow('503')
     expect(calls).toHaveLength(1)
   })
@@ -170,12 +149,10 @@ describe('timeout', () => {
 
   it('stops the timer after a successful request', async () => {
     vi.useFakeTimers()
-    try {
-      await createExporter({ timeoutMs: 5_000 }).export([record])
-      expect(vi.getTimerCount()).toBe(0)
-    } finally {
-      vi.useRealTimers()
-    }
+
+    await createExporter({ timeoutMs: 5_000 }).export([record])
+
+    expect(vi.getTimerCount()).toBe(0)
   })
 })
 
@@ -199,16 +176,12 @@ describe('compression and scope', () => {
 
   it('sends uncompressed when CompressionStream is unavailable', async () => {
     vi.stubGlobal('CompressionStream', undefined)
-    try {
-      const { calls, fetcher } = sequenceFetcher([204])
+    const { calls, fetcher } = sequenceFetcher()
 
-      await createExporter({ fetcher, compression: 'gzip' }).export([record])
+    await createExporter({ fetcher, compression: 'gzip' }).export([record])
 
-      expect(typeof calls[0]?.body).toBe('string')
-      expect(calls[0]?.headers).not.toHaveProperty('Content-Encoding')
-    } finally {
-      vi.unstubAllGlobals()
-    }
+    expect(typeof calls[0]?.body).toBe('string')
+    expect(calls[0]?.headers).not.toHaveProperty('Content-Encoding')
   })
 
   it('applies scope and schema URL options', async () => {

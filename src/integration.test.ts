@@ -11,6 +11,7 @@ import {
   statusResponse,
   type Script,
 } from './test-support/fake-collector.js'
+import { stubFetchKeepalive } from './test-support/keepalive.js'
 import { traceContextFromApi } from './trace-context.js'
 
 // Every test builds the SDK through createSamLogger and observes it only via the collector.
@@ -72,16 +73,7 @@ function stubPage(options: { keepaliveSupported: boolean }) {
   vi.stubGlobal('addEventListener', windowTracking.add)
   vi.stubGlobal('removeEventListener', windowTracking.remove)
   vi.stubGlobal('document', documentStub)
-  vi.stubGlobal(
-    'Request',
-    options.keepaliveSupported
-      ? class {
-          get keepalive() {
-            return false
-          }
-        }
-      : class {},
-  )
+  stubFetchKeepalive(options.keepaliveSupported)
 
   return {
     pagehide: () => windowEvents.dispatchEvent(new Event('pagehide')),

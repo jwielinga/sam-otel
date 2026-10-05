@@ -3,19 +3,39 @@ import { LogBatcher, type LogBatcherOptions } from './batcher.js'
 
 type TestOptions = Omit<Partial<LogBatcherOptions<string>>, 'sendBatch'> & {
   sendBatch?: LogBatcherOptions<string>['sendBatch']
+  // Holds the first send until `release()` is called.
+  blockFirstSend?: boolean
+  // Routes flushOnUnload() to its own recorder instead of falling back to sendBatch.
+  separateUnload?: boolean
 }
 
-function setup(options: TestOptions = {}) {
+function setup({
+  blockFirstSend,
+  separateUnload,
+  ...options
+}: TestOptions = {}) {
   const batches: string[][] = []
+  const unloadBatches: string[][] = []
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+
   const batcher = new LogBatcher<string>({
     ...options,
     sendBatch: async (items) => {
       batches.push([...items])
+      if (blockFirstSend && batches.length === 1) await gate
       await options.sendBatch?.(items)
     },
+    ...(separateUnload && {
+      sendBatchOnUnload: async (items: readonly string[]) => {
+        unloadBatches.push([...items])
+      },
+    }),
   })
 
-  return { batcher, batches }
+  return { batcher, batches, unloadBatches, release }
 }
 
 afterEach(() => {
@@ -72,65 +92,38 @@ describe('LogBatcher', () => {
   })
 
   it('caps batches and preserves order while a send is in flight', async () => {
-    let notifyRequestStarted!: () => void
-    let releaseRequest!: () => void
-    const requestStarted = new Promise<void>((resolve) => {
-      notifyRequestStarted = resolve
-    })
-    const { batcher, batches } = setup({
+    const { batcher, batches, release } = setup({
       maxBatchSize: 2,
       scheduledDelayMs: 60_000,
-      sendBatch: async () => {
-        if (batches.length === 1) {
-          notifyRequestStarted()
-          await new Promise<void>((resolve) => {
-            releaseRequest = resolve
-          })
-        }
-      },
+      blockFirstSend: true,
     })
     const firstBatch = [batcher.add('one'), batcher.add('two')]
-
-    await requestStarted
     const queued = [
       batcher.add('three'),
       batcher.add('four'),
       batcher.add('five'),
     ]
-    releaseRequest()
+
+    release()
     await Promise.all([...firstBatch, ...queued])
 
     expect(batches).toEqual([['one', 'two'], ['three', 'four'], ['five']])
   })
 
   it('rejects new entries when pending queue is full', async () => {
-    let notifyRequestStarted!: () => void
-    let releaseRequest!: () => void
-    const requestStarted = new Promise<void>((resolve) => {
-      notifyRequestStarted = resolve
-    })
-    let requestCount = 0
-    const { batcher } = setup({
+    const { batcher, release } = setup({
       maxBatchSize: 1,
       maxQueueSize: 1,
-      sendBatch: async () => {
-        if (requestCount++ === 0) {
-          notifyRequestStarted()
-          await new Promise<void>((resolve) => {
-            releaseRequest = resolve
-          })
-        }
-      },
+      blockFirstSend: true,
     })
     const inFlight = batcher.add('in flight')
-
-    await requestStarted
     const queued = batcher.add('queued')
+
     await expect(batcher.add('rejected')).rejects.toThrow(
       'SamLogger batch queue is full.',
     )
 
-    releaseRequest()
+    release()
     await Promise.all([inFlight, queued])
   })
 
@@ -162,5 +155,97 @@ describe('LogBatcher', () => {
     await expect(batcher.add('after shutdown')).rejects.toThrow(
       'LogBatcher has been shut down.',
     )
+  })
+})
+
+describe('overflowStrategy', () => {
+  it('drops the oldest queued record and counts it', async () => {
+    const onDropped = vi.fn()
+    const { batcher, batches, release } = setup({
+      maxBatchSize: 1,
+      maxQueueSize: 2,
+      overflowStrategy: 'drop-oldest',
+      onDropped,
+      blockFirstSend: true,
+    })
+    const inFlight = batcher.add('in flight')
+    const oldest = batcher.add('oldest')
+    const kept = batcher.add('kept')
+    const newest = batcher.add('newest')
+
+    await expect(oldest).rejects.toThrow(
+      'SamLogger batch queue is full; oldest record dropped.',
+    )
+    release()
+    await Promise.all([inFlight, kept, newest])
+
+    expect(batches).toEqual([['in flight'], ['kept'], ['newest']])
+    expect(batcher.droppedCount).toBe(1)
+    expect(onDropped).toHaveBeenCalledExactlyOnceWith(1)
+  })
+
+  it('counts records rejected by the default strategy', async () => {
+    const onDropped = vi.fn()
+    const { batcher, release } = setup({
+      maxBatchSize: 1,
+      maxQueueSize: 1,
+      onDropped,
+      blockFirstSend: true,
+    })
+    const inFlight = batcher.add('in flight')
+    const queued = batcher.add('queued')
+
+    await expect(batcher.add('rejected')).rejects.toThrow(
+      'SamLogger batch queue is full.',
+    )
+    release()
+    await Promise.all([inFlight, queued])
+
+    expect(batcher.droppedCount).toBe(1)
+    expect(onDropped).toHaveBeenCalledWith(1)
+  })
+})
+
+describe('flushOnUnload', () => {
+  it('sends pending items immediately even while a flush is in flight', async () => {
+    const { batcher, batches, unloadBatches, release } = setup({
+      maxBatchSize: 2,
+      scheduledDelayMs: 60_000,
+      blockFirstSend: true,
+      separateUnload: true,
+    })
+    const first = batcher.add('first')
+    void batcher.flush()
+    const pending = [batcher.add('a'), batcher.add('b'), batcher.add('c')]
+
+    const unload = batcher.flushOnUnload()
+
+    expect(unloadBatches).toEqual([['a', 'b'], ['c']])
+    await unload
+    await Promise.all(pending)
+
+    release()
+    await first
+    expect(batches).toEqual([['first']])
+  })
+
+  it('falls back to sendBatch and rejects affected items on failure', async () => {
+    const { batcher } = setup({
+      scheduledDelayMs: 60_000,
+      sendBatch: async () => {
+        throw new Error('unload send failed')
+      },
+    })
+    const pending = batcher.add('lost')
+
+    await expect(batcher.flushOnUnload()).rejects.toThrow('unload send failed')
+    await expect(pending).rejects.toThrow('unload send failed')
+  })
+
+  it('is a no-op when nothing is pending', async () => {
+    const { batcher, unloadBatches } = setup({ separateUnload: true })
+
+    await expect(batcher.flushOnUnload()).resolves.toBeUndefined()
+    expect(unloadBatches).toEqual([])
   })
 })
