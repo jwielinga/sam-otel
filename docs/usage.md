@@ -16,18 +16,14 @@ Sam's npm package name is `sam-otel`. Until its first release is published, try 
 2. From the consuming application, add the local repository path. For a sibling app and `sam-otel` checkout:
 
    ```sh
-
+   pnpm add ../sam-otel
    ```
-
-pnpm add ../sam-otel
-
-````
 
 After the first release, install the published package with:
 
 ```sh
 pnpm add sam-otel
-````
+```
 
 ## Configure
 

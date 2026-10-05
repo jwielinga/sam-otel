@@ -43,7 +43,9 @@ export class OtlpHttpExporter {
   async export(records: readonly OtlpLogRecord[]): Promise<void> {
     const request = createOtlpLogsRequest(this.resourceAttributes, records)
     const body = JSON.stringify(request)
-    const response = await this.fetcher(this.endpoint, {
+    // Detach from `this`: browser fetch throws "Illegal invocation" as a method.
+    const fetcher = this.fetcher
+    const response = await fetcher(this.endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

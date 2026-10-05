@@ -74,6 +74,22 @@ describe('OtlpHttpExporter', () => {
     )
   })
 
+  it('calls the fetcher without the exporter as receiver', async () => {
+    // Browser fetch throws "Illegal invocation" when called as a method.
+    const exporter = new OtlpHttpExporter({
+      endpoint: '/v1/logs',
+      resourceAttributes,
+      fetcher: function (this: unknown) {
+        if (this !== undefined && this !== globalThis) {
+          throw new TypeError('Illegal invocation')
+        }
+        return Promise.resolve(new Response(null, { status: 204 }))
+      } as typeof fetch,
+    })
+
+    await expect(exporter.export([record])).resolves.toBeUndefined()
+  })
+
   describe('keepalive', () => {
     function capture(keepalive: boolean | undefined) {
       const requests: RequestInit[] = []

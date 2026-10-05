@@ -37,7 +37,11 @@ export class LogLogger {
     if (this.isShutdown) {
       return Promise.reject(new Error('SamLogger has been shut down.'))
     }
-    return this.batcher.add(createRecord())
+
+    // The executor runs synchronously, so the record is queued before flush()/shutdown().
+    return new Promise<void>((resolve) => {
+      resolve(this.batcher.add(createRecord()))
+    })
   }
 
   flush(): Promise<void> {

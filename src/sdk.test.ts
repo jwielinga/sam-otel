@@ -6,6 +6,10 @@ import type { SamLoggerOptions } from './sdk.types.js'
 const defaultFetcher: typeof fetch = async () =>
   new Response(null, { status: 204 })
 
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
 function setup(options: Partial<SamLoggerOptions> = {}): SamLogger {
   return createSamLogger({
     endpoint: 'https://collector.example/v1/logs',
@@ -106,6 +110,66 @@ describe('SDK factory', () => {
     ).toHaveLength(2)
   })
 
+  it('rejects instead of throwing for values that cannot be encoded', async () => {
+    const logger = setup()
+
+    await expect(logger.info('bad', { ratio: Number.NaN })).rejects.toThrow(
+      'Log attribute "ratio" must be a finite number.',
+    )
+    await expect(logger.logRecord({ body: 2n ** 63n })).rejects.toThrow(
+      'Log attribute "body" must fit in a signed int64.',
+    )
+  })
+
+  it('keeps working after an encoding failure', async () => {
+    const logger = setup()
+
+    await expect(logger.info('bad', { ratio: Infinity })).rejects.toThrow()
+    await expect(logger.info('good')).resolves.toBeUndefined()
+  })
+
+  it('queues a log synchronously so an immediate flush sends it', async () => {
+    const requests: unknown[] = []
+    const logger = setup({
+      batch: { maxBatchSize: 10, scheduledDelayMs: 60_000 },
+      fetcher: async (_input, init) => {
+        requests.push(JSON.parse(String(init?.body)))
+        return new Response(null, { status: 204 })
+      },
+    })
+
+    const pending = logger.info('queued')
+    await logger.flush()
+    await pending
+
+    expect(requests).toHaveLength(1)
+  })
+
+  it('sends a log made just before shutdown', async () => {
+    const requests: unknown[] = []
+    const logger = setup({
+      batch: { maxBatchSize: 10, scheduledDelayMs: 60_000 },
+      fetcher: async (_input, init) => {
+        requests.push(JSON.parse(String(init?.body)))
+        return new Response(null, { status: 204 })
+      },
+    })
+
+    const pending = logger.info('last words')
+    await logger.shutdown()
+    await expect(pending).resolves.toBeUndefined()
+
+    expect(requests).toHaveLength(1)
+  })
+
+  it('fails fast when no fetch implementation is available', () => {
+    vi.stubGlobal('fetch', undefined)
+
+    expect(
+      () => new SamLogger({ endpoint: '/v1/logs', serviceName: 'checkout' }),
+    ).toThrow('fetch is not available in this environment')
+  })
+
   it('supports direct SamLogger construction', async () => {
     let exported = false
     const logger = new SamLogger({
@@ -124,10 +188,6 @@ describe('SDK factory', () => {
   })
 
   describe('keepalive', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
     async function sendOne(
       options: Partial<SamLoggerOptions>,
     ): Promise<RequestInit | undefined> {

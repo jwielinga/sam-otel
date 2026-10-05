@@ -68,7 +68,7 @@ export class LogBatcher<T> {
     })
 
     if (this.pendingItems.length >= this.flushThreshold) {
-      void this.flush().catch(() => undefined)
+      this.flushInBackground()
     } else {
       this.scheduleFlush()
     }
@@ -124,7 +124,7 @@ export class LogBatcher<T> {
     if (this.activeFlush === activeFlush) this.activeFlush = undefined
 
     if (this.pendingItems.length >= this.flushThreshold) {
-      void this.flush().catch(() => undefined)
+      this.flushInBackground()
     } else if (this.pendingItems.length > 0) {
       this.scheduleFlush()
     }
@@ -141,8 +141,13 @@ export class LogBatcher<T> {
 
     this.flushTimer = setTimeout(() => {
       this.flushTimer = undefined
-      void this.flush().catch(() => undefined)
+      this.flushInBackground()
     }, this.scheduledDelayMs)
+  }
+
+  // Failures already reject each affected item's own promise.
+  private flushInBackground(): void {
+    void this.flush().catch(() => undefined)
   }
 
   private clearFlushTimer(): void {

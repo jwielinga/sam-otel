@@ -21,14 +21,13 @@ await logger.info('User signed in', { userId: 'user-123' })
 ```
 
 Sam batches logs by default and sends them when it has 20 records or after 5 seconds. Configure `batch.maxBatchSize` and `batch.scheduledDelayMs` to change these thresholds.
-Sam batches logs by default and sends them when it has 20 records or after 5 seconds. Configure `batch.maxBatchSize` and `batch.scheduledDelayMs` to change these thresholds.
+
 Sam sets the Fetch `keepalive` flag on requests by default so logs can finish sending during page unload; set `keepalive: false` to disable it. Browsers without support ignore it.
 
 `new SamLogger(options)` remains available for callers that prefer class construction.
 
 See the [user guide](docs/usage.md) for installation, configuration, browser CORS, error handling, and current transport limits.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development and commit conventions, and [docs/releasing.md](docs/releasing.md) for the one-time GitHub and npm setup.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development and commit conventions, and [RELEASING.md](RELEASING.md) for the one-time GitHub and npm setup.
 
 ## Development
@@ -38,10 +37,12 @@ Use Node.js via nvm, pinned to `.nvmrc`:
 ```sh
 nvm install
 nvm use
+pnpm install
 ```
 
+Run checks individually or all at once:
+
 ```sh
-pnpm install
 pnpm test
 pnpm lint
 pnpm typecheck

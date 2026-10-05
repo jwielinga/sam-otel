@@ -1,14 +1,12 @@
-In the npm package settings, add a GitHub Actions Trusted Publisher for the repository owner, repository `sam-otel`, and workflow `.github/workflows/release.yml`. Do not create an `NPM_TOKEN` secret. The release job uses the Node version pinned in `.nvmrc` and npm 12.1.0 for npm Trusted Publishing and provenance.
-
 # Release Setup
 
 Releases are created by semantic-release after a quality check on `main`. Conventional Commit messages determine the next version. The release workflow publishes `sam-otel` to npm through GitHub Actions Trusted Publishing; it does not use a stored npm token. semantic-release updates package version metadata, then invokes npm CLI directly for publication because the semantic-release npm plugin's token verification is not OIDC-compatible.
 
 ## One-Time Setup
 
-1. Create the public GitHub repository named `sam-otel` under its intended owner, set it as this checkout's `origin`, and add its canonical URL to the `repository` field in `package.json`. This checkout has no Git remote configured yet, so the owner URL cannot be filled in here.
+1. Create the public GitHub repository named `sam-otel` under its intended owner. The `origin` remote and the `repository` field in `package.json` already point at `https://github.com/jwielinga/sam-otel.git`; change both if the owner differs.
 2. Claim the unscoped npm package name `sam-otel` before another publisher does. At setup time, `npm view sam-otel` returned `E404`, indicating no public package was registered.
-3. In the npm package settings, add a GitHub Actions Trusted Publisher for the repository owner, repository `sam-otel`, and workflow `.github/workflows/release.yml`. Do not create an `NPM_TOKEN` secret. The release job uses Node 24 with npm 11.5.1, which supports npm Trusted Publishing and provenance.
+3. In the npm package settings, add a GitHub Actions Trusted Publisher for the repository owner, repository `sam-otel`, and workflow `.github/workflows/release.yml`. Do not create an `NPM_TOKEN` secret. The release job uses the Node version pinned in `.nvmrc` and npm 12.1.0, which support npm Trusted Publishing and provenance.
 4. Set the repository's default branch to `main`. Under Settings > Actions > General, restrict workflow permissions to read-only by default and allow only the actions this project uses.
 5. Add a branch ruleset for `main`: require pull requests, require the `Quality / quality` status check, block force pushes and branch deletion, and prevent bypass where practical. Require at least one approval when another maintainer is available.
 6. Enable private vulnerability reporting, secret scanning and push protection, Dependabot alerts, and Dependabot security updates in repository settings. Confirm workflow files and `SECURITY.md` are visible after the repository becomes public.

@@ -15,11 +15,18 @@ function createResourceAttributes(options: SamLoggerOptions): LogAttributes {
 }
 
 function createBatcher(options: SamLoggerOptions): LogBatcher<OtlpLogRecord> {
+  const fetcher = options.fetcher ?? globalThis.fetch
+  if (typeof fetcher !== 'function') {
+    throw new TypeError(
+      'fetch is not available in this environment; provide the fetcher option.',
+    )
+  }
+
   const exporter = new OtlpHttpExporter({
     endpoint: options.endpoint,
     resourceAttributes: createResourceAttributes(options),
     headers: options.headers,
-    fetcher: options.fetcher ?? globalThis.fetch,
+    fetcher,
     keepalive: (options.keepalive ?? true) && isFetchKeepaliveSupported(),
   })
 
