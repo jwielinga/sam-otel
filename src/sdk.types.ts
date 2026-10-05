@@ -20,4 +20,5 @@ export interface SamLoggerOptions {
   headers?: Readonly<Record<string, string>>
   batch?: SamLoggerBatchOptions
   fetcher?: typeof fetch
+  keepalive?: boolean
 }

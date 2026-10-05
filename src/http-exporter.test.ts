@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { OtlpHttpExporter } from './http-exporter.js'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { isFetchKeepaliveSupported, OtlpHttpExporter } from './http-exporter.js'
 import type { OtlpLogRecord } from './otlp.js'
 
 const resourceAttributes = { 'service.name': 'checkout' }
@@ -72,5 +72,91 @@ describe('OtlpHttpExporter', () => {
     await expect(exporter.export([record])).rejects.toThrow(
       'fetcher failed synchronously',
     )
+  })
+
+  describe('keepalive', () => {
+    function capture(keepalive: boolean | undefined) {
+      const requests: RequestInit[] = []
+      const exporter = new OtlpHttpExporter({
+        endpoint: '/v1/logs',
+        resourceAttributes,
+        keepalive,
+        fetcher: async (_input, init) => {
+          requests.push(init ?? {})
+          return new Response(null, { status: 204 })
+        },
+      })
+      return { exporter, requests }
+    }
+
+    it('sets fetch keepalive when enabled', async () => {
+      const { exporter, requests } = capture(true)
+
+      await exporter.export([record])
+
+      expect(requests[0]?.keepalive).toBe(true)
+    })
+
+    it('omits keepalive when disabled or unset', async () => {
+      const disabled = capture(false)
+      const unset = capture(undefined)
+
+      await disabled.exporter.export([record])
+      await unset.exporter.export([record])
+
+      expect(disabled.requests[0]).not.toHaveProperty('keepalive')
+      expect(unset.requests[0]).not.toHaveProperty('keepalive')
+    })
+
+    it('never sends a Connection header', async () => {
+      const { exporter, requests } = capture(true)
+
+      await exporter.export([record])
+
+      expect(requests[0]?.headers).not.toHaveProperty('Connection')
+    })
+
+    it('omits keepalive when the body exceeds the browser limit', async () => {
+      const { exporter, requests } = capture(true)
+      const large: OtlpLogRecord = {
+        ...record,
+        body: { stringValue: 'x'.repeat(70 * 1024) },
+      }
+
+      await exporter.export([large])
+
+      expect(requests[0]).not.toHaveProperty('keepalive')
+    })
+  })
+
+  describe('isFetchKeepaliveSupported', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('is false when Request lacks keepalive', () => {
+      vi.stubGlobal('Request', class {})
+
+      expect(isFetchKeepaliveSupported()).toBe(false)
+    })
+
+    it('is false when Request is undefined', () => {
+      vi.stubGlobal('Request', undefined)
+
+      expect(isFetchKeepaliveSupported()).toBe(false)
+    })
+
+    it('is true when Request exposes keepalive', () => {
+      vi.stubGlobal(
+        'Request',
+        class {
+          get keepalive() {
+            return false
+          }
+        },
+      )
+
+      expect(isFetchKeepaliveSupported()).toBe(true)
+    })
   })
 })

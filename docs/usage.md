@@ -108,6 +108,26 @@ try {
 
 The `fetcher` option can replace browser `fetch` for tests or custom environments. It must follow the standard Fetch API signature.
 
+## Keepalive
+
+Sam sets the Fetch `keepalive` flag on export requests so the browser can finish sending queued logs while a page unloads. It is on by default; set `keepalive: false` to turn it off.
+
+```ts
+const logger = createSamLogger({
+  endpoint: 'https://collector.example.com/v1/logs',
+  serviceName: 'storefront',
+  keepalive: false,
+})
+```
+
+Sam cannot send a `Connection: keep-alive` header: browsers forbid scripts from setting `Connection`, and HTTP/2 and HTTP/3 do not allow it. Browsers already reuse connections on their own, so the flag above is the only browser-level control.
+
+Browser limits:
+
+- Browsers without Fetch `keepalive` support (for example Firefox before 133, and very old Chrome and Safari) ignore the flag. Sam detects support and sends a normal request, so logging still works, but unload delivery is not guaranteed.
+- Browsers cap in-flight keepalive request bodies at 64 KiB. Sam omits the flag for larger batches, which then send as normal requests. Lower `batch.maxBatchSize` if unload delivery matters for large records.
+- Keepalive requests with custom headers such as `Authorization` trigger a CORS preflight. The collector must answer it, and the browser may not complete the preflight if the page is already closing.
+
 ## Batch Logs
 
 Batching is always enabled. Sam sends records when the batch reaches 20 logs or 5 seconds pass after the first pending log. Set `batch` options to change those thresholds:

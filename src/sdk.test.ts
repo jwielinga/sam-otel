@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createSamLogger, SamLogger } from './sdk.js'
 import { OTelSeverityNumber } from './otel.types.js'
 import type { SamLoggerOptions } from './sdk.types.js'
@@ -121,5 +121,61 @@ describe('SDK factory', () => {
     await logger.info('direct construction')
 
     expect(exported).toBe(true)
+  })
+
+  describe('keepalive', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    async function sendOne(
+      options: Partial<SamLoggerOptions>,
+    ): Promise<RequestInit | undefined> {
+      let init: RequestInit | undefined
+      const logger = setup({
+        ...options,
+        fetcher: async (_input, requestInit) => {
+          init = requestInit
+          return new Response(null, { status: 204 })
+        },
+      })
+
+      await logger.info('unload test')
+      return init
+    }
+
+    it('is enabled by default when the browser supports it', async () => {
+      vi.stubGlobal(
+        'Request',
+        class {
+          get keepalive() {
+            return false
+          }
+        },
+      )
+
+      expect((await sendOne({}))?.keepalive).toBe(true)
+    })
+
+    it('can be disabled', async () => {
+      vi.stubGlobal(
+        'Request',
+        class {
+          get keepalive() {
+            return false
+          }
+        },
+      )
+
+      expect(await sendOne({ keepalive: false })).not.toHaveProperty(
+        'keepalive',
+      )
+    })
+
+    it('is skipped in browsers without keepalive support', async () => {
+      vi.stubGlobal('Request', class {})
+
+      expect(await sendOne({})).not.toHaveProperty('keepalive')
+    })
   })
 })

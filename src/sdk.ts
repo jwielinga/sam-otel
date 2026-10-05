@@ -1,5 +1,5 @@
 import { LogBatcher } from './batcher.js'
-import { OtlpHttpExporter } from './http-exporter.js'
+import { OtlpHttpExporter, isFetchKeepaliveSupported } from './http-exporter.js'
 import { LogLogger } from './logger.js'
 import type { OtlpLogRecord } from './otlp.js'
 import type { LogAttributes, SamLoggerOptions } from './sdk.types.js'
@@ -20,6 +20,7 @@ function createBatcher(options: SamLoggerOptions): LogBatcher<OtlpLogRecord> {
     resourceAttributes: createResourceAttributes(options),
     headers: options.headers,
     fetcher: options.fetcher ?? globalThis.fetch,
+    keepalive: (options.keepalive ?? true) && isFetchKeepaliveSupported(),
   })
 
   return new LogBatcher({

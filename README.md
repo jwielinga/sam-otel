@@ -22,6 +22,8 @@ await logger.info('User signed in', { userId: 'user-123' })
 
 Sam batches logs by default and sends them when it has 20 records or after 5 seconds. Configure `batch.maxBatchSize` and `batch.scheduledDelayMs` to change these thresholds.
 Sam batches logs by default and sends them when it has 20 records or after 5 seconds. Configure `batch.maxBatchSize` and `batch.scheduledDelayMs` to change these thresholds.
+Sam sets the Fetch `keepalive` flag on requests by default so logs can finish sending during page unload; set `keepalive: false` to disable it. Browsers without support ignore it.
+
 `new SamLogger(options)` remains available for callers that prefer class construction.
 
 See the [user guide](docs/usage.md) for installation, configuration, browser CORS, error handling, and current transport limits.
