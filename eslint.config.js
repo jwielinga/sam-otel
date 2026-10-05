@@ -5,4 +5,9 @@ export default tseslint.config(
   { ignores: ['dist/**', 'node_modules/**'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+    },
+  },
 )

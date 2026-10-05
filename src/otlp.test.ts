@@ -17,6 +17,7 @@ describe('createOtlpLogRecord', () => {
 
     expect(createOtlpLogRecord('warn', 'low stock', {})).toEqual({
       timeUnixNano: '1791201600000000000',
+      observedTimeUnixNano: '1791201600000000000',
       severityNumber: OTelSeverityNumber.WARN,
       severityText: 'WARN',
       body: { stringValue: 'low stock' },

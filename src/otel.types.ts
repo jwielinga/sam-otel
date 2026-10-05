@@ -14,18 +14,18 @@ export type OTelAnyValue =
 
 export type OTelAttributes = Record<string, OTelAnyValue>
 
-export interface OTelEntityRef {
+export type OTelEntityRef = {
   key: string
   id: OTelAnyValue
 }
 
-export interface OTelResource {
+export type OTelResource = {
   attributes?: OTelAttributes
   droppedAttributesCount?: number
   entityRefs?: OTelEntityRef[]
 }
 
-export interface OTelInstrumentationScope {
+export type OTelInstrumentationScope = {
   name?: string
   version?: string
   attributes?: OTelAttributes
@@ -69,7 +69,7 @@ export const OTelLogRecordFlags = {
 
 export type OTelLogRecordFlagsValue = number
 
-export interface OTelLogRecord {
+export type OTelLogRecord = {
   timeUnixNano?: OTelTimestamp
   observedTimeUnixNano?: OTelTimestamp
   severityNumber?: OTelSeverityNumber
@@ -83,19 +83,19 @@ export interface OTelLogRecord {
   eventName?: string
 }
 
-export interface OTelScopeLogs {
+export type OTelScopeLogs = {
   scope?: OTelInstrumentationScope
   schemaUrl?: string
   logRecords?: OTelLogRecord[]
 }
 
-export interface OTelResourceLogs {
+export type OTelResourceLogs = {
   resource?: OTelResource
   scopeLogs?: OTelScopeLogs[]
   schemaUrl?: string
 }
 
-export interface OTelLogsData {
+export type OTelLogsData = {
   resourceLogs?: OTelResourceLogs[]
 }
 
@@ -106,7 +106,7 @@ export type OTelJsonUint64 = string
 export type OTelJsonTraceId = string
 export type OTelJsonSpanId = string
 
-export interface OTelJsonAnyValue {
+export type OTelJsonAnyValue = {
   stringValue?: string
   boolValue?: boolean
   intValue?: OTelJsonUint64
@@ -116,50 +116,50 @@ export interface OTelJsonAnyValue {
   kvlistValue?: OTelJsonKeyValueList
 }
 
-export interface OTelJsonArrayValue {
+export type OTelJsonArrayValue = {
   values?: OTelJsonAnyValue[]
 }
 
-export interface OTelJsonKeyValueList {
+export type OTelJsonKeyValueList = {
   values?: OTelJsonKeyValue[]
 }
 
-export interface OTelJsonKeyValue {
+export type OTelJsonKeyValue = {
   key: string
   value?: OTelJsonAnyValue
 }
 
-export interface OTelJsonResource {
+export type OTelJsonResource = {
   attributes?: OTelJsonKeyValue[]
   droppedAttributesCount?: number
   entityRefs?: OTelJsonEntityRef[]
 }
 
-export interface OTelJsonEntityRef {
+export type OTelJsonEntityRef = {
   key: string
   id?: OTelJsonAnyValue
 }
 
-export interface OTelJsonInstrumentationScope {
+export type OTelJsonInstrumentationScope = {
   name?: string
   version?: string
   attributes?: OTelJsonKeyValue[]
   droppedAttributesCount?: number
 }
 
-export interface OTelJsonScopeLogs {
+export type OTelJsonScopeLogs = {
   scope?: OTelJsonInstrumentationScope
   logRecords?: OTelJsonLogRecord[]
   schemaUrl?: string
 }
 
-export interface OTelJsonResourceLogs {
+export type OTelJsonResourceLogs = {
   resource?: OTelJsonResource
   scopeLogs?: OTelJsonScopeLogs[]
   schemaUrl?: string
 }
 
-export interface OTelJsonLogRecord {
+export type OTelJsonLogRecord = {
   timeUnixNano?: OTelJsonUint64
   observedTimeUnixNano?: OTelJsonUint64
   severityNumber?: OTelSeverityNumber
@@ -173,20 +173,20 @@ export interface OTelJsonLogRecord {
   eventName?: string
 }
 
-export interface OTelJsonLogsData {
+export type OTelJsonLogsData = {
   resourceLogs?: OTelJsonResourceLogs[]
 }
 
 export type OTelJsonExportLogsServiceRequest = OTelJsonLogsData
 
-export interface OTelApplicationLog extends OTelLogRecord {
+export type OTelApplicationLog = OTelLogRecord & {
   body?: string | Record<string, OTelAnyValue>
 }
 
-export interface OTelEvent extends OTelLogRecord {
+export type OTelEvent = OTelLogRecord & {
   eventName: string
 }
 
-export interface OTelSimpleLog extends OTelLogRecord {
+export type OTelSimpleLog = OTelLogRecord & {
   body?: string
 }

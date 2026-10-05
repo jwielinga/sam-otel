@@ -15,6 +15,7 @@ function setup(options: Partial<SamLoggerOptions> = {}): SamLogger {
     endpoint: 'https://collector.example/v1/logs',
     serviceName: 'checkout',
     batch: { maxBatchSize: 1 },
+    detectResource: false,
     ...options,
     fetcher: options.fetcher ?? defaultFetcher,
   })

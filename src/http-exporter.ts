@@ -1,15 +1,63 @@
-import { createOtlpLogsRequest, type OtlpLogRecord } from './otlp.js'
+import {
+  createOtlpLogsRequest,
+  type OtlpLogRecord,
+  type OtlpRequestOptions,
+} from './otlp.js'
+import { readPartialSuccess, type PartialSuccess } from './partial-success.js'
+import {
+  computeBackoffMs,
+  parseRetryAfter,
+  RETRYABLE_STATUSES,
+  sleep,
+  type RetryPolicy,
+} from './retry.js'
 import type { LogAttributes } from './sdk.types.js'
+import { raceTimeout } from './timeout.js'
 
 // Browsers cap in-flight keepalive bodies at 64 KiB; stay below it.
 const KEEPALIVE_MAX_BODY_BYTES = 63 * 1024
 
-export interface OtlpHttpExporterOptions {
+type Body = string | Uint8Array<ArrayBuffer>
+
+type Payload = {
+  body: Body
+  contentEncoding?: 'gzip'
+}
+
+export type OtlpHttpExporterOptions = OtlpRequestOptions & {
   endpoint: string
   resourceAttributes: LogAttributes
   headers?: Readonly<Record<string, string>>
   fetcher: typeof fetch
   keepalive?: boolean
+  compression?: 'none' | 'gzip'
+  // Per-attempt timeout; unset or 0 disables.
+  timeoutMs?: number
+  // Unset means a single attempt.
+  retry?: RetryPolicy
+  onPartialSuccess?: (partial: PartialSuccess) => void
+}
+
+export class OtlpExportError extends Error {
+  readonly status: number | undefined
+  readonly retryable: boolean
+  readonly retryAfterMs: number | undefined
+
+  constructor(
+    message: string,
+    options: {
+      retryable: boolean
+      status?: number
+      retryAfterMs?: number
+      cause?: unknown
+    },
+  ) {
+    super(message, { cause: options.cause })
+    this.name = 'OtlpExportError'
+    this.status = options.status
+    this.retryable = options.retryable
+    this.retryAfterMs = options.retryAfterMs
+  }
 }
 
 // Older browsers lack fetch `keepalive` and silently ignore the flag.
@@ -17,11 +65,35 @@ export function isFetchKeepaliveSupported(): boolean {
   return typeof Request !== 'undefined' && 'keepalive' in Request.prototype
 }
 
-function fitsKeepaliveLimit(body: string): boolean {
+function fitsKeepaliveLimit(body: Body): boolean {
+  if (typeof body !== 'string') {
+    return body.byteLength <= KEEPALIVE_MAX_BODY_BYTES
+  }
   if (body.length > KEEPALIVE_MAX_BODY_BYTES) return false
   return (
     typeof TextEncoder !== 'undefined' &&
     new TextEncoder().encode(body).length <= KEEPALIVE_MAX_BODY_BYTES
+  )
+}
+
+function httpError(response: Response): OtlpExportError {
+  const statusText = response.statusText ? ` ${response.statusText}` : ''
+  return new OtlpExportError(
+    `OTLP log request failed: ${response.status}${statusText}`,
+    {
+      status: response.status,
+      retryable: RETRYABLE_STATUSES.has(response.status),
+      retryAfterMs: parseRetryAfter(response.headers.get('Retry-After')),
+    },
+  )
+}
+
+// Anything fetch itself throws (network, CORS, abort) is worth retrying.
+function toExportError(error: unknown): OtlpExportError {
+  if (error instanceof OtlpExportError) return error
+  return new OtlpExportError(
+    error instanceof Error ? error.message : String(error),
+    { retryable: true, cause: error },
   )
 }
 
@@ -31,6 +103,11 @@ export class OtlpHttpExporter {
   private readonly headers: Readonly<Record<string, string>>
   private readonly fetcher: typeof fetch
   private readonly keepalive: boolean
+  private readonly compression: 'none' | 'gzip'
+  private readonly timeoutMs: number
+  private readonly retry: RetryPolicy | undefined
+  private readonly onPartialSuccess: OtlpHttpExporterOptions['onPartialSuccess']
+  private readonly requestOptions: OtlpRequestOptions
 
   constructor(options: OtlpHttpExporterOptions) {
     this.endpoint = options.endpoint
@@ -38,30 +115,162 @@ export class OtlpHttpExporter {
     this.headers = { ...options.headers }
     this.fetcher = options.fetcher
     this.keepalive = options.keepalive ?? false
+    this.compression = options.compression ?? 'none'
+    this.timeoutMs = options.timeoutMs ?? 0
+    this.retry = options.retry
+    this.onPartialSuccess = options.onPartialSuccess
+    this.requestOptions = {
+      scope: options.scope,
+      resourceSchemaUrl: options.resourceSchemaUrl,
+    }
   }
 
   async export(records: readonly OtlpLogRecord[]): Promise<void> {
-    const request = createOtlpLogsRequest(this.resourceAttributes, records)
-    const body = JSON.stringify(request)
+    const payload = await this.compress(this.encode(records))
+    const keepalive = this.keepalive && fitsKeepaliveLimit(payload.body)
+
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.attempt(payload, keepalive)
+      } catch (error) {
+        const delayMs = this.retryDelayMs(error, attempt)
+        if (delayMs === undefined) throw error
+        await sleep(delayMs)
+      }
+    }
+  }
+
+  // Page-unload path: the request starts synchronously and is never compressed or retried.
+  async exportOnUnload(records: readonly OtlpLogRecord[]): Promise<void> {
+    const payload = this.encode(records)
+    return this.attempt(
+      payload,
+      this.keepalive && fitsKeepaliveLimit(payload.body),
+    )
+  }
+
+  // Splits records so each keepalive request fits the browser body limit.
+  splitForUnload(records: readonly OtlpLogRecord[]): OtlpLogRecord[][] {
+    if (!this.keepalive) return [[...records]]
+
+    const split = (batch: readonly OtlpLogRecord[]): OtlpLogRecord[][] => {
+      if (batch.length <= 1 || fitsKeepaliveLimit(this.encode(batch).body)) {
+        return [[...batch]]
+      }
+      const middle = Math.ceil(batch.length / 2)
+      return [...split(batch.slice(0, middle)), ...split(batch.slice(middle))]
+    }
+
+    return split(records)
+  }
+
+  private encode(records: readonly OtlpLogRecord[]): Payload {
+    return {
+      body: JSON.stringify(
+        createOtlpLogsRequest(
+          this.resourceAttributes,
+          records,
+          this.requestOptions,
+        ),
+      ),
+    }
+  }
+
+  private async compress(payload: Payload): Promise<Payload> {
+    if (
+      this.compression !== 'gzip' ||
+      typeof CompressionStream === 'undefined'
+    ) {
+      return payload
+    }
+
+    const bytes =
+      typeof payload.body === 'string'
+        ? new TextEncoder().encode(payload.body)
+        : payload.body
+    const stream = new Blob([bytes])
+      .stream()
+      .pipeThrough(new CompressionStream('gzip'))
+
+    return {
+      body: new Uint8Array(await new Response(stream).arrayBuffer()),
+      contentEncoding: 'gzip',
+    }
+  }
+
+  // Returns undefined when the failure should not be retried.
+  private retryDelayMs(error: unknown, attempt: number): number | undefined {
+    const retry = this.retry
+    if (!retry || attempt >= retry.maxAttempts) return undefined
+    if (!(error instanceof OtlpExportError) || !error.retryable) {
+      return undefined
+    }
+
+    if (error.retryAfterMs === undefined) {
+      return computeBackoffMs(retry, attempt)
+    }
+    // A server asking for a longer pause than we allow is not worth waiting on.
+    return error.retryAfterMs > retry.maxDelayMs
+      ? undefined
+      : error.retryAfterMs
+  }
+
+  private async attempt(payload: Payload, keepalive: boolean): Promise<void> {
+    try {
+      const response = await this.send(payload, keepalive)
+      if (!response.ok) throw httpError(response)
+      await this.reportPartialSuccess(response)
+    } catch (error) {
+      throw toExportError(error)
+    }
+  }
+
+  private send(payload: Payload, keepalive: boolean): Promise<Response> {
+    const controller = this.timeoutMs > 0 ? new AbortController() : undefined
     // Detach from `this`: browser fetch throws "Illegal invocation" as a method.
     const fetcher = this.fetcher
-    const response = await fetcher(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.headers,
-      },
-      body,
-      ...(this.keepalive && fitsKeepaliveLimit(body)
-        ? { keepalive: true }
-        : {}),
-    })
+    const request = (async () =>
+      fetcher(this.endpoint, {
+        method: 'POST',
+        headers: this.headersFor(payload),
+        body: payload.body,
+        ...(keepalive ? { keepalive: true } : {}),
+        ...(controller ? { signal: controller.signal } : {}),
+      }))()
 
-    if (!response.ok) {
-      const statusText = response.statusText ? ` ${response.statusText}` : ''
-      throw new Error(
-        `OTLP log request failed: ${response.status}${statusText}`,
-      )
+    if (!controller) return request
+    return raceTimeout(
+      request,
+      this.timeoutMs,
+      () =>
+        new OtlpExportError(
+          `OTLP log request timed out after ${this.timeoutMs}ms`,
+          { retryable: true },
+        ),
+      () => controller.abort(),
+    )
+  }
+
+  private headersFor(payload: Payload): Record<string, string> {
+    return {
+      'Content-Type': 'application/json',
+      ...(payload.contentEncoding === undefined
+        ? {}
+        : { 'Content-Encoding': payload.contentEncoding }),
+      ...this.headers,
+    }
+  }
+
+  private async reportPartialSuccess(response: Response): Promise<void> {
+    if (!this.onPartialSuccess) return
+
+    const partial = await readPartialSuccess(response)
+    if (!partial) return
+
+    try {
+      this.onPartialSuccess(partial)
+    } catch {
+      // A throwing callback must not fail (and so retry) an export the collector accepted.
     }
   }
 }

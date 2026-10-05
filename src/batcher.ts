@@ -5,14 +5,17 @@ const DEFAULT_MAX_QUEUE_SIZE = 1_000
 const DEFAULT_SCHEDULED_DELAY_MS = 5_000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
-interface PendingItem<T> {
+type PendingItem<T> = {
   item: T
   resolve: () => void
   reject: (error: unknown) => void
 }
 
-export interface LogBatcherOptions<T> extends SamLoggerBatchOptions {
+export type LogBatcherOptions<T> = SamLoggerBatchOptions & {
   sendBatch: (items: readonly T[]) => Promise<void>
+  // Used by flushOnUnload(); defaults to sendBatch.
+  sendBatchOnUnload?: (items: readonly T[]) => Promise<void>
+  onDropped?: (totalDropped: number) => void
 }
 
 export class LogBatcher<T> {
@@ -20,11 +23,15 @@ export class LogBatcher<T> {
   private readonly maxQueueSize: number
   private readonly flushThreshold: number
   private readonly scheduledDelayMs: number
+  private readonly overflowStrategy: 'reject-new' | 'drop-oldest'
   private readonly sendBatch: LogBatcherOptions<T>['sendBatch']
+  private readonly sendBatchOnUnload: LogBatcherOptions<T>['sendBatch']
+  private readonly onDropped: LogBatcherOptions<T>['onDropped']
   private readonly pendingItems: PendingItem<T>[] = []
   private flushTimer: ReturnType<typeof setTimeout> | undefined
   private activeFlush: Promise<void> | undefined
   private isShutdown = false
+  private totalDropped = 0
 
   constructor(options: LogBatcherOptions<T>) {
     const maxBatchSize = options.maxBatchSize ?? DEFAULT_MAX_BATCH_SIZE
@@ -48,11 +55,20 @@ export class LogBatcher<T> {
       )
     }
 
+    const overflowStrategy = options.overflowStrategy ?? 'reject-new'
+
     this.maxBatchSize = maxBatchSize
     this.maxQueueSize = maxQueueSize
     this.flushThreshold = Math.min(maxBatchSize, maxQueueSize)
     this.scheduledDelayMs = scheduledDelayMs
+    this.overflowStrategy = overflowStrategy
     this.sendBatch = options.sendBatch
+    this.sendBatchOnUnload = options.sendBatchOnUnload ?? options.sendBatch
+    this.onDropped = options.onDropped
+  }
+
+  get droppedCount(): number {
+    return this.totalDropped
   }
 
   add(item: T): Promise<void> {
@@ -60,7 +76,16 @@ export class LogBatcher<T> {
       return Promise.reject(new Error('LogBatcher has been shut down.'))
     }
     if (this.pendingItems.length >= this.maxQueueSize) {
-      return Promise.reject(new Error('SamLogger batch queue is full.'))
+      if (this.overflowStrategy === 'reject-new') {
+        this.recordDrop()
+        return Promise.reject(new Error('SamLogger batch queue is full.'))
+      }
+
+      const oldest = this.pendingItems.shift()
+      this.recordDrop()
+      oldest?.reject(
+        new Error('SamLogger batch queue is full; oldest record dropped.'),
+      )
     }
 
     const itemPromise = new Promise<void>((resolve, reject) => {
@@ -130,10 +155,34 @@ export class LogBatcher<T> {
     }
   }
 
+  // Sends every pending item immediately, without waiting for an in-flight flush.
+  flushOnUnload(): Promise<void> {
+    this.clearFlushTimer()
+
+    const sends: Promise<void>[] = []
+    while (this.pendingItems.length > 0) {
+      const batch = this.pendingItems.splice(0, this.maxBatchSize)
+      sends.push(this.sendAndSettle(batch, this.sendBatchOnUnload))
+    }
+
+    return Promise.allSettled(sends).then((results) => {
+      throwFailures(
+        results.flatMap((result) =>
+          result.status === 'rejected' ? [result.reason as unknown] : [],
+        ),
+      )
+    })
+  }
+
   shutdown(): Promise<void> {
     this.isShutdown = true
     this.clearFlushTimer()
     return this.flush()
+  }
+
+  private recordDrop(): void {
+    this.totalDropped++
+    this.onDropped?.(this.totalDropped)
   }
 
   private scheduleFlush(): void {
@@ -156,23 +205,38 @@ export class LogBatcher<T> {
     this.flushTimer = undefined
   }
 
+  private async sendAndSettle(
+    batch: PendingItem<T>[],
+    send: (items: readonly T[]) => Promise<void>,
+  ): Promise<void> {
+    try {
+      await send(batch.map(({ item }) => item))
+    } catch (error) {
+      for (const pending of batch) pending.reject(error)
+      throw error
+    }
+    for (const pending of batch) pending.resolve()
+  }
+
   private async drainPendingItems(): Promise<void> {
     const failures: unknown[] = []
 
     while (this.pendingItems.length > 0) {
       const batch = this.pendingItems.splice(0, this.maxBatchSize)
       try {
-        await this.sendBatch(batch.map(({ item }) => item))
-        for (const pending of batch) pending.resolve()
+        await this.sendAndSettle(batch, this.sendBatch)
       } catch (error) {
         failures.push(error)
-        for (const pending of batch) pending.reject(error)
       }
     }
 
-    if (failures.length === 1) throw failures[0]
-    if (failures.length > 1) {
-      throw new AggregateError(failures, 'Multiple OTLP log batches failed.')
-    }
+    throwFailures(failures)
+  }
+}
+
+function throwFailures(failures: unknown[]): void {
+  if (failures.length === 1) throw failures[0]
+  if (failures.length > 1) {
+    throw new AggregateError(failures, 'Multiple OTLP log batches failed.')
   }
 }

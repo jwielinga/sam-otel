@@ -1,36 +1,103 @@
 import type { LogBatcher } from './batcher.js'
+import { nowUnixNano } from './clock.js'
 import {
   createOtlpLogRecord,
+  DEFAULT_LIMITS,
   encodeOtlpLogRecord,
+  type OtlpLimits,
   type OtlpLogRecord,
+  type OtlpRecordExtras,
 } from './otlp.js'
 import type { OTelLogRecord } from './otel.types.js'
 import type {
   LogAttributeValue,
   LogAttributes,
+  LogOptions,
   LogSeverity,
+  TraceContextProvider,
 } from './sdk.types.js'
+
+export type LogLoggerOptions = {
+  limits?: OtlpLimits
+  traceContext?: TraceContextProvider
+  onShutdown?: () => void
+}
+
+const TRACE_FLAGS_MASK = 0xff
 
 export class LogLogger {
   private readonly batcher: LogBatcher<OtlpLogRecord>
+  private readonly limits: OtlpLimits
+  private readonly traceContext: TraceContextProvider | undefined
+  private readonly onShutdown: (() => void) | undefined
   private isShutdown = false
 
-  constructor(batcher: LogBatcher<OtlpLogRecord>) {
+  constructor(
+    batcher: LogBatcher<OtlpLogRecord>,
+    options: LogLoggerOptions = {},
+  ) {
     this.batcher = batcher
+    this.limits = options.limits ?? DEFAULT_LIMITS
+    this.traceContext = options.traceContext
+    this.onShutdown = options.onShutdown
+  }
+
+  // Records dropped because the pending queue was full.
+  get droppedRecordCount(): number {
+    return this.batcher.droppedCount
   }
 
   log(
     severity: LogSeverity,
     body: LogAttributeValue,
     attributes: LogAttributes = {},
+    options?: LogOptions,
   ): Promise<void> {
     return this.enqueueRecord(() =>
-      createOtlpLogRecord(severity, body, attributes),
+      createOtlpLogRecord(
+        severity,
+        body,
+        attributes,
+        this.resolveExtras(options),
+        this.limits,
+      ),
     )
   }
 
   logRecord(record: OTelLogRecord): Promise<void> {
-    return this.enqueueRecord(() => encodeOtlpLogRecord(record))
+    return this.enqueueRecord(() => {
+      const context =
+        record.traceId === undefined && record.spanId === undefined
+          ? this.traceContext?.()
+          : undefined
+
+      return encodeOtlpLogRecord(
+        {
+          ...record,
+          observedTimeUnixNano: record.observedTimeUnixNano ?? nowUnixNano(),
+          ...(context === undefined
+            ? {}
+            : {
+                traceId: context.traceId,
+                spanId: context.spanId,
+                flags: record.flags ?? toFlags(context.traceFlags),
+              }),
+        },
+        this.limits,
+      )
+    })
+  }
+
+  private resolveExtras(options: LogOptions | undefined): OtlpRecordExtras {
+    const trace =
+      options?.traceId === undefined ? this.traceContext?.() : options
+
+    return {
+      traceId: trace?.traceId,
+      spanId: trace?.spanId,
+      flags: toFlags(trace?.traceFlags),
+      eventName: options?.eventName,
+    }
   }
 
   private enqueueRecord(createRecord: () => OtlpLogRecord): Promise<void> {
@@ -50,26 +117,51 @@ export class LogLogger {
 
   shutdown(): Promise<void> {
     this.isShutdown = true
+    this.onShutdown?.()
     return this.batcher.shutdown()
   }
 
-  trace(body: LogAttributeValue, attributes?: LogAttributes): Promise<void> {
-    return this.log('trace', body, attributes)
+  trace(
+    body: LogAttributeValue,
+    attributes?: LogAttributes,
+    options?: LogOptions,
+  ): Promise<void> {
+    return this.log('trace', body, attributes, options)
   }
 
-  debug(body: LogAttributeValue, attributes?: LogAttributes): Promise<void> {
-    return this.log('debug', body, attributes)
+  debug(
+    body: LogAttributeValue,
+    attributes?: LogAttributes,
+    options?: LogOptions,
+  ): Promise<void> {
+    return this.log('debug', body, attributes, options)
   }
 
-  info(body: LogAttributeValue, attributes?: LogAttributes): Promise<void> {
-    return this.log('info', body, attributes)
+  info(
+    body: LogAttributeValue,
+    attributes?: LogAttributes,
+    options?: LogOptions,
+  ): Promise<void> {
+    return this.log('info', body, attributes, options)
   }
 
-  warn(body: LogAttributeValue, attributes?: LogAttributes): Promise<void> {
-    return this.log('warn', body, attributes)
+  warn(
+    body: LogAttributeValue,
+    attributes?: LogAttributes,
+    options?: LogOptions,
+  ): Promise<void> {
+    return this.log('warn', body, attributes, options)
   }
 
-  error(body: LogAttributeValue, attributes?: LogAttributes): Promise<void> {
-    return this.log('error', body, attributes)
+  error(
+    body: LogAttributeValue,
+    attributes?: LogAttributes,
+    options?: LogOptions,
+  ): Promise<void> {
+    return this.log('error', body, attributes, options)
   }
+}
+
+function toFlags(traceFlags: number | undefined): number | undefined {
+  return traceFlags === undefined ? undefined : traceFlags & TRACE_FLAGS_MASK
 }

@@ -1,10 +1,6 @@
 # Sam
 
-Sam is a lightweight browser-side TypeScript npm package for sending OpenTelemetry logs to an OTLP/HTTP collector. It is a library, not a UI application.
-
-## Package Status
-
-The package name is `sam-otel`. It is prepared for automated publication, but is not available from npm until its first release. For local use, build Sam, then add its repository path to a consuming project with `pnpm add ../sam-otel` (adjust the path as needed). After publication, install it with `pnpm add sam-otel`.
+Sam is a lightweight browser-side TypeScript npm package for sending OpenTelemetry logs to an OTLP/HTTP collector. It is meant to provide a simple, elegant solution to debug sessions on your web app.
 
 ## Quick Start
 
@@ -22,7 +18,11 @@ await logger.info('User signed in', { userId: 'user-123' })
 
 Sam batches logs by default and sends them when it has 20 records or after 5 seconds. Configure `batch.maxBatchSize` and `batch.scheduledDelayMs` to change these thresholds.
 
-Sam sets the Fetch `keepalive` flag on requests by default so logs can finish sending during page unload; set `keepalive: false` to disable it. Browsers without support ignore it.
+Sam sets the Fetch `keepalive` flag on requests by default so logs can finish sending during page unload; set `keepalive: false` to disable it. Browsers without support ignore it. Sam also flushes queued logs on `pagehide` and when the page is hidden.
+
+Failed exports are retried (network errors, timeouts, and HTTP 429/502/503/504, honoring `Retry-After`) with a 10-second per-request timeout. Set `onDiagnostic` to observe export failures, partial success, and dropped records.
+
+Log `Error` objects directly, add trace correlation with `traceContext` or per-call options, and choose gzip compression, instrumentation scope, schema URLs, and attribute limits. Sam adds browser resource attributes by default; set `detectResource: false` to turn that off.
 
 `new SamLogger(options)` remains available for callers that prefer class construction.
 
