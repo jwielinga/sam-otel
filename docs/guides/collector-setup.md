@@ -26,7 +26,7 @@ Sam sends these headers, plus any [`headers`](./configuration.md#request-headers
 For a cross-origin request with a `Content-Type: application/json` body, the browser first sends an `OPTIONS` preflight. The collector must answer it, allowing:
 
 - your application's **origin**,
-- the methods `POST` and `OPTIONS`,
+- the actual request method, `POST` (the preflight itself uses `OPTIONS`),
 - the request headers Sam sends: `Content-Type`, `Content-Encoding` when compressing, and any custom headers such as `Authorization`.
 
 If CORS is wrong, the browser blocks the request and Sam sees a network error. In the console you will see a CORS message. Sam retries it as a network failure, then rejects with the browser's original error message.

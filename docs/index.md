@@ -43,3 +43,7 @@ await logger.info('Checkout completed', { orderId: 'order-42', total: 12.5 })
 2. [Configuration](./guides/configuration.md) explains the required options and the collector endpoint.
 3. [Collector setup](./guides/collector-setup.md) covers CORS, which browsers need before logs arrive.
 4. The [options reference](./reference/options.md) lists every option and default in one place.
+
+## Contributing
+
+See [Contributing](./contributing.md) for local setup, checks, documentation preview, and pull request conventions.
