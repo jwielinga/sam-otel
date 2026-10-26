@@ -1,5 +1,7 @@
 # Contributing
 
+Participation in this project is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Development
 
 Use nvm to install and select the Node.js version pinned in `.nvmrc`. The supported package runtime range is declared in `package.json`; use pnpm 8.6.12 for development. Install dependencies and run the full quality check before opening a pull request:

@@ -1,0 +1,42 @@
+name: Bug report
+description: Report incorrect behavior in sam-otel
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include collector credentials, access tokens, or real user log data. Report security vulnerabilities privately through the Security tab.
+  - type: input
+    id: version
+    attributes:
+      label: sam-otel version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and runtime
+      description: Browser name and version, or Node.js version if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: A minimal code sample using `SamLogger` and the options you set.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: collector
+    attributes:
+      label: Collector and network details
+      description: Collector type and version, HTTP status codes, and relevant console or network errors.
