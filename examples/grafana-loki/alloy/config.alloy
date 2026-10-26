@@ -1,0 +1,20 @@
+otelcol.receiver.otlp "browser" {
+  http {
+    endpoint = "0.0.0.0:4318"
+
+    cors {
+      allowed_origins = ["http://localhost:8080"]
+      allowed_headers = ["Content-Type", "Content-Encoding"]
+    }
+  }
+
+  output {
+    logs = [otelcol.exporter.otlphttp.loki.input]
+  }
+}
+
+otelcol.exporter.otlphttp "loki" {
+  client {
+    endpoint = "http://loki:3100/otlp"
+  }
+}

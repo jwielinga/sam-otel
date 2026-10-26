@@ -1,0 +1,66 @@
+name: sam-grafana-loki
+
+services:
+  loki:
+    image: grafana/loki:3.5.2
+    command: -config.file=/etc/loki/config.yaml
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '-', 'http://localhost:3100/ready']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  alloy:
+    image: grafana/alloy:v1.10.2
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    ports:
+      - '4318:4318'
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:13.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: sam-demo-only
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      loki:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ../..
+      dockerfile: examples/grafana-loki/Dockerfile
+    environment:
+      VITE_OTLP_ENDPOINT: http://localhost:4318/v1/logs
+      LOKI_PROXY_TARGET: http://loki:3100
+    ports:
+      - '8080:8080'
+    depends_on:
+      alloy:
+        condition: service_started
+      loki:
+        condition: service_healthy
+
+volumes:
+  grafana-data:
+  loki-data:

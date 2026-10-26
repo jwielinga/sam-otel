@@ -1,0 +1,29 @@
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite'
+
+const exampleDir = dirname(fileURLToPath(import.meta.url))
+
+export default defineConfig({
+  root: resolve(exampleDir, 'app'),
+  plugins: [tailwindcss()],
+  resolve: {
+    alias: {
+      '@': resolve(exampleDir, 'app'),
+      'sam-otel': resolve(exampleDir, '../../dist/sam.js'),
+    },
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 8080,
+    strictPort: true,
+    // Lets the page query Loki without CORS.
+    proxy: {
+      '/loki/api': {
+        target: process.env.LOKI_PROXY_TARGET ?? 'http://localhost:3100',
+        changeOrigin: true,
+      },
+    },
+  },
+})
