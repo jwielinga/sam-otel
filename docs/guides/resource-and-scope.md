@@ -5,7 +5,7 @@ title: Resource and scope
 
 # Resource and scope
 
-OTLP groups log records by **resource** (who produced them) and **instrumentation scope** (which library or module produced them). Sam sends one resource and one scope per request.
+OTLP groups log records by **resource** (who produced them) and **instrumentation scope** (which library or module produced them). Som sends one resource and one scope per request.
 
 ## Resource attributes
 
@@ -16,7 +16,7 @@ The resource is built from, in increasing priority:
 3. `service.name` from `serviceName`, and `service.version` from `serviceVersion`.
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   serviceVersion: '2.1.0',
@@ -28,11 +28,11 @@ const logger = createSamLogger({
 
 ### Browser detection
 
-By default Sam adds attributes that describe the SDK and the browser:
+By default Som adds attributes that describe the SDK and the browser:
 
 | Attribute                | Value                                               |
 | ------------------------ | --------------------------------------------------- |
-| `telemetry.sdk.name`     | `sam-otel`                                          |
+| `telemetry.sdk.name`     | `som-otel`                                          |
 | `telemetry.sdk.language` | `webjs`                                             |
 | `user_agent.original`    | `navigator.userAgent`                               |
 | `browser.language`       | `navigator.language`                                |
@@ -47,7 +47,7 @@ Anything you set in `resourceAttributes` replaces the detected value with the sa
 Turn detection off to send only your own attributes:
 
 ```ts
-createSamLogger({
+createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   detectResource: false,
@@ -62,10 +62,10 @@ createSamLogger({
 
 ## Instrumentation scope
 
-Records are sent under the scope `sam` by default. Use `scope` to name your own:
+Records are sent under the scope `som` by default. Use `scope` to name your own:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   scope: {
@@ -78,7 +78,7 @@ const logger = createSamLogger({
 
 | Field        | Default | Notes                              |
 | ------------ | ------- | ---------------------------------- |
-| `name`       | `'sam'` |                                    |
+| `name`       | `'som'` |                                    |
 | `version`    | unset   | Omitted from the request if unset  |
 | `attributes` | unset   | Same value types as log attributes |
 | `schemaUrl`  | unset   | Schema URL of the scope            |
@@ -88,7 +88,7 @@ const logger = createSamLogger({
 Schema URLs tell the backend which version of the semantic conventions your attribute names follow. Set one for the scope with `scope.schemaUrl` and one for the resource with `resourceSchemaUrl`:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   scope: { schemaUrl: 'https://opentelemetry.io/schemas/1.27.0' },

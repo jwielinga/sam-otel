@@ -1,6 +1,6 @@
-import type { SamLoggerRetryOptions } from './sdk.types.js'
+import type { SomLoggerRetryOptions } from './sdk.types.js'
 
-export type RetryPolicy = Required<SamLoggerRetryOptions>
+export type RetryPolicy = Required<SomLoggerRetryOptions>
 
 const DEFAULT_RETRY_POLICY: RetryPolicy = {
   maxAttempts: 3,
@@ -15,7 +15,7 @@ export const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([
 ])
 
 export function resolveRetryPolicy(
-  options: SamLoggerRetryOptions | false | undefined,
+  options: SomLoggerRetryOptions | false | undefined,
 ): RetryPolicy | undefined {
   if (options === false) return undefined
 

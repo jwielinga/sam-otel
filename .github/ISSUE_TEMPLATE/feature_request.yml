@@ -1,12 +1,12 @@
 name: Feature request
-description: Suggest an improvement to sam-otel
+description: Suggest an improvement to som-otel
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What are you trying to do that sam-otel does not support well?
+      description: What are you trying to do that som-otel does not support well?
     validations:
       required: true
   - type: textarea

@@ -1,4 +1,4 @@
-import { OTelSeverityNumber } from 'sam-otel'
+import { OTelSeverityNumber } from 'som-otel'
 import { useRef, useState } from 'react'
 import { logger } from './logger'
 import { useLokiTail } from './loki'
@@ -33,7 +33,7 @@ export function App() {
 
     try {
       if (severity === 'fatal') {
-        // Sam has no logger.fatal(); logRecord() takes the OTel FATAL severity number.
+        // Som has no logger.fatal(); logRecord() takes the OTel FATAL severity number.
         await logger.logRecord({
           severityNumber: OTelSeverityNumber.FATAL,
           severityText: 'FATAL',
@@ -78,7 +78,7 @@ export function App() {
     try {
       JSON.parse('[{ "id": 1, "title": ')
     } catch (error) {
-      // An Error body makes Sam add exception.type, exception.message and the stack trace.
+      // An Error body makes Som add exception.type, exception.message and the stack trace.
       void send(
         'error',
         error instanceof Error ? error : new Error(String(error)),
@@ -92,8 +92,8 @@ export function App() {
   return (
     <>
       <header className="topbar">
-        <a className="wordmark" href="/" aria-label="Sam home">
-          sam<span>/</span>
+        <a className="wordmark" href="/" aria-label="Som home">
+          som<span>/</span>
         </a>
         <span className="topbar-note">LOCAL TELEMETRY LAB</span>
         <span className="topbar-end">
@@ -112,20 +112,20 @@ export function App() {
             <em>Watch it land.</em>
           </h1>
           <p className="lede">
-            Each button sends a real OpenTelemetry log with Sam to Alloy. The
+            Each button sends a real OpenTelemetry log with Som to Alloy. The
             right column polls Loki, so you see the log after it has been
             stored.
           </p>
           <nav className="dashboard-links" aria-label="Grafana dashboards">
             <a
-              href={`${GRAFANA}/sam-browser-logs/browser-logs`}
+              href={`${GRAFANA}/som-browser-logs/browser-logs`}
               target="_blank"
               rel="noreferrer"
             >
               Browser Logs <span aria-hidden="true">↗</span>
             </a>
             <a
-              href={`${GRAFANA}/sam-error-overview/error-overview`}
+              href={`${GRAFANA}/som-error-overview/error-overview`}
               target="_blank"
               rel="noreferrer"
             >
@@ -150,7 +150,7 @@ export function App() {
       </main>
 
       <footer className="footer">
-        <span>SAM OTEL EXAMPLE</span>
+        <span>SOM OTEL EXAMPLE</span>
         <span>
           APP <b>→</b> ALLOY <b>→</b> LOKI
         </span>

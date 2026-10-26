@@ -2,16 +2,16 @@ import { themes as prismThemes } from 'prism-react-renderer'
 import type { Config } from '@docusaurus/types'
 import type * as Preset from '@docusaurus/preset-classic'
 
-const repository = 'https://github.com/jwielinga/sam-otel'
+const repository = 'https://github.com/jwielinga/som-otel'
 
 const config: Config = {
-  title: 'Sam',
+  title: 'Som',
   tagline:
     'Send OpenTelemetry logs from the browser to any OTLP/HTTP collector',
   url: 'https://jwielinga.github.io',
-  baseUrl: '/sam-otel/',
+  baseUrl: '/som-otel/',
   organizationName: 'jwielinga',
-  projectName: 'sam-otel',
+  projectName: 'som-otel',
   trailingSlash: false,
   onBrokenLinks: 'throw',
 
@@ -41,7 +41,7 @@ const config: Config = {
   themeConfig: {
     colorMode: { respectPrefersColorScheme: true },
     navbar: {
-      title: 'Sam',
+      title: 'Som',
       items: [
         {
           type: 'docSidebar',
@@ -50,7 +50,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://www.npmjs.com/package/sam-otel',
+          href: 'https://www.npmjs.com/package/som-otel',
           label: 'npm',
           position: 'right',
         },
@@ -59,7 +59,7 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      copyright: 'Sam is licensed under EUPL-1.2.',
+      copyright: 'Som is licensed under EUPL-1.2.',
     },
     prism: {
       theme: prismThemes.github,

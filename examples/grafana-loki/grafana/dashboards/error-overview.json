@@ -26,7 +26,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=\"sam-demo\"} | severity_text=~\"ERROR|FATAL\" [5m]))",
+          "expr": "sum(count_over_time({service_name=\"som-demo\"} | severity_text=~\"ERROR|FATAL\" [5m]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -51,7 +51,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "{service_name=\"sam-demo\"} | severity_text=~\"ERROR|FATAL\"",
+          "expr": "{service_name=\"som-demo\"} | severity_text=~\"ERROR|FATAL\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -62,11 +62,11 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["sam", "errors", "logs"],
+  "tags": ["som", "errors", "logs"],
   "templating": { "list": [] },
   "time": { "from": "now-24h", "to": "now" },
   "timezone": "browser",
   "title": "Error Overview",
-  "uid": "sam-error-overview",
+  "uid": "som-error-overview",
   "version": 1
 }

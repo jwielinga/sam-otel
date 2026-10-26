@@ -5,10 +5,10 @@ title: Logger API
 
 # Logger API
 
-`createSamLogger(options)` returns a `SamLogger`, the logger you call everything on. `SamLogger` is exported as a type only, for annotating variables and parameters.
+`createSomLogger(options)` returns a `SomLogger`, the logger you call everything on. `SomLogger` is exported as a type only, for annotating variables and parameters.
 
 ```ts
-import { createSamLogger, type SamLogger } from 'sam-otel'
+import { createSomLogger, type SomLogger } from 'som-otel'
 ```
 
 ## Severity helpers
@@ -57,7 +57,7 @@ Sends all queued records now. Resolves when the exports finish; rejects if one f
 logger.shutdown(): Promise<void>
 ```
 
-Stops accepting new logs, removes the page listeners, and flushes the queue. Later log calls reject with `SamLogger has been shut down.`
+Stops accepting new logs, removes the page listeners, and flushes the queue. Later log calls reject with `SomLogger has been shut down.`
 
 ## `droppedRecordCount`
 
@@ -73,9 +73,9 @@ All log methods return a promise that:
 
 - **resolves** when the batch containing the record is exported successfully,
 - **rejects** with an [`OtlpExportError`](../guides/retries-and-timeouts.md#otlpexporterror) when the export fails,
-- **rejects** with `SamLogger batch queue is full.` or `SamLogger batch queue is full; oldest record dropped.` on overflow,
+- **rejects** with `SomLogger batch queue is full.` or `SomLogger batch queue is full; oldest record dropped.` on overflow,
 - **rejects** with a `TypeError` when a value cannot be encoded (non-finite number, out-of-range `bigint`),
-- **rejects** with `SamLogger has been shut down.` after `shutdown()`.
+- **rejects** with `SomLogger has been shut down.` after `shutdown()`.
 
 The record is queued synchronously when the method is called, so an immediate `flush()` or `shutdown()` includes it.
 
@@ -94,10 +94,10 @@ type LogOptions = { eventName?: string } & (
 
 ## `OtlpHttpExporter`
 
-`OtlpHttpExporter` is the transport `SamLogger` uses internally, exported for advanced use. Most apps never need it. It sends log records that are already in OTLP/JSON shape (`OtlpLogRecord`), and supports the same `retry`, `timeoutMs`, `compression`, and `keepalive` options. Unlike `SamLogger`, it does not retry or time out unless you ask for it:
+`OtlpHttpExporter` is the transport `SomLogger` uses internally, exported for advanced use. Most apps never need it. It sends log records that are already in OTLP/JSON shape (`OtlpLogRecord`), and supports the same `retry`, `timeoutMs`, `compression`, and `keepalive` options. Unlike `SomLogger`, it does not retry or time out unless you ask for it:
 
 ```ts
-import { OtlpHttpExporter } from 'sam-otel'
+import { OtlpHttpExporter } from 'som-otel'
 
 const exporter = new OtlpHttpExporter({
   endpoint: 'https://collector.example.com/v1/logs',

@@ -5,12 +5,12 @@ title: Limitations
 
 # Limitations
 
-What Sam deliberately does not do, so you can plan around it.
+What Som deliberately does not do, so you can plan around it.
 
 ## Scope
 
 - **Logs only.** No traces and no metrics. Use the OpenTelemetry JS SDK for those, and correlate through [`traceContext`](./guides/trace-correlation.md).
-- **No automatic capture.** Sam does not hook `console`, uncaught errors, network requests, or navigation. See [Recipes](./guides/recipes.md).
+- **No automatic capture.** Som does not hook `console`, uncaught errors, network requests, or navigation. See [Recipes](./guides/recipes.md).
 - **JSON over HTTP only.** No protobuf, no gRPC, no WebSocket transports.
 - **One endpoint.** Each logger sends to one collector URL.
 
@@ -26,7 +26,7 @@ What Sam deliberately does not do, so you can plan around it.
 
 - **No per-logger default attributes.** Use `resourceAttributes` for stable context or wrap the logger. See [Recipes](./guides/recipes.md#add-context-to-every-log).
 - **No sampling or filtering.** Every call you make is sent. Filter before calling the logger.
-- **No redaction.** Sam does not scrub attribute values. Do not log secrets or personal data you do not want to send.
+- **No redaction.** Som does not scrub attribute values. Do not log secrets or personal data you do not want to send.
 - **`telemetry.sdk.version` is not set.**
 
 ## Security

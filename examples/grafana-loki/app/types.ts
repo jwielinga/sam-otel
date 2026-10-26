@@ -1,4 +1,4 @@
-import type { OTelAnyValue } from 'sam-otel'
+import type { OTelAnyValue } from 'som-otel'
 
 export const severities = ['debug', 'info', 'warn', 'error', 'fatal'] as const
 

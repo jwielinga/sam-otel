@@ -1,5 +1,5 @@
 name: Bug report
-description: Report incorrect behavior in sam-otel
+description: Report incorrect behavior in som-otel
 labels: [bug]
 body:
   - type: markdown
@@ -9,7 +9,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: sam-otel version
+      label: som-otel version
       placeholder: 0.1.0
     validations:
       required: true
@@ -31,7 +31,7 @@ body:
     id: reproduction
     attributes:
       label: Steps to reproduce
-      description: A minimal code sample using `SamLogger` and the options you set.
+      description: A minimal code sample using `SomLogger` and the options you set.
       render: ts
     validations:
       required: true

@@ -2,7 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "sam-debugging-logs",
+    "name": "som-debugging-logs",
     "namespace": "default",
     "uid": "80948a37-872b-47d1-bc9d-d9e2ce73aa90",
     "resourceVersion": "1793043386454995",
@@ -15,14 +15,14 @@
       "grafana.app/createdBy": "access-policy:service",
       "grafana.app/folder": "eg0bjv5118kqob",
       "grafana.app/managedBy": "classic-file-provisioning",
-      "grafana.app/managerId": "Sam example",
+      "grafana.app/managerId": "Som example",
       "grafana.app/sourceChecksum": "13f032bc00ce49f1194fd9493a5a784c",
       "grafana.app/sourcePath": "/var/lib/grafana/dashboards/debugging-logs.json",
       "grafana.app/sourceTimestamp": "1793043381000",
       "grafana.app/updatedBy": "access-policy:service",
       "grafana.app/updatedTimestamp": "2026-10-26T19:36:26Z",
-      "grafana.app/folderTitle": "Sam example",
-      "grafana.app/folderUrl": "/dashboards/f/eg0bjv5118kqob/sam-example"
+      "grafana.app/folderTitle": "Som example",
+      "grafana.app/folderUrl": "/dashboards/f/eg0bjv5118kqob/som-example"
     }
   },
   "spec": {
@@ -48,7 +48,7 @@
       }
     ],
     "cursorSync": "Crosshair",
-    "description": "Debug Sam browser logs: drag on the volume chart to zoom, then filter by severity, action, free-text search, or any label.",
+    "description": "Debug Som browser logs: drag on the volume chart to zoom, then filter by severity, action, free-text search, or any label.",
     "editable": true,
     "elements": {
       "panel-10": {
@@ -70,7 +70,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "{service_name=\"sam-demo\"} | exception_type!=\"\" |~ \"(?i)${search}\"",
+                        "expr": "{service_name=\"som-demo\"} | exception_type!=\"\" |~ \"(?i)${search}\"",
                         "maxLines": 200,
                         "queryType": "range"
                       },
@@ -136,7 +136,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (severity_text) (count_over_time({service_name=\"sam-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" |~ \"(?i)${search}\" [$__interval]))",
+                        "expr": "sum by (severity_text) (count_over_time({service_name=\"som-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" |~ \"(?i)${search}\" [$__interval]))",
                         "legendFormat": "{{severity_text}}",
                         "queryType": "range"
                       },
@@ -329,7 +329,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (severity_text) (count_over_time({service_name=\"sam-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" |~ \"(?i)${search}\" [$__range]))",
+                        "expr": "sum by (severity_text) (count_over_time({service_name=\"som-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" |~ \"(?i)${search}\" [$__range]))",
                         "legendFormat": "{{severity_text}}",
                         "queryType": "instant"
                       },
@@ -489,7 +489,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (demo_action) (count_over_time({service_name=\"sam-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" | demo_action!=\"\" |~ \"(?i)${search}\" [$__range]))",
+                        "expr": "sum by (demo_action) (count_over_time({service_name=\"som-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" | demo_action!=\"\" |~ \"(?i)${search}\" [$__range]))",
                         "legendFormat": "{{demo_action}}",
                         "queryType": "instant"
                       },
@@ -617,7 +617,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "{service_name=\"sam-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" |~ \"(?i)${search}\"",
+                        "expr": "{service_name=\"som-demo\"} | severity_text=~\"${severity:pipe}\" | demo_action=~\"${action:pipe}\" |~ \"(?i)${search}\"",
                         "maxLines": 500,
                         "queryType": "range"
                       },
@@ -753,7 +753,7 @@
     "links": [],
     "liveNow": false,
     "preload": false,
-    "tags": ["sam", "debug", "logs"],
+    "tags": ["som", "debug", "logs"],
     "timeSettings": {
       "autoRefresh": "10s",
       "autoRefreshIntervals": [

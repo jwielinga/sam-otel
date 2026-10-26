@@ -5,17 +5,17 @@ title: Options
 
 # Options
 
-All options are fields of `SamLoggerOptions`, passed to `createSamLogger()`.
+All options are fields of `SomLoggerOptions`, passed to `createSomLogger()`.
 
 ```ts
-import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
+import { createSomLogger, type SomLoggerOptions } from 'som-otel'
 ```
 
 ## Required
 
 | Option        | Type     | Description                                                     |
 | ------------- | -------- | --------------------------------------------------------------- |
-| `endpoint`    | `string` | Complete OTLP/HTTP logs URL. Sam adds no path. Cannot be empty. |
+| `endpoint`    | `string` | Complete OTLP/HTTP logs URL. Som adds no path. Cannot be empty. |
 | `serviceName` | `string` | Becomes the `service.name` resource attribute. Cannot be empty. |
 
 ## Identity and request
@@ -29,7 +29,7 @@ import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
 
 ## Batching
 
-`batch` is an object of `SamLoggerBatchOptions`. See [Batching and flushing](../guides/batching.md).
+`batch` is an object of `SomLoggerBatchOptions`. See [Batching and flushing](../guides/batching.md).
 
 | Field              | Type                            | Default        | Description                                      |
 | ------------------ | ------------------------------- | -------------- | ------------------------------------------------ |
@@ -44,7 +44,7 @@ import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
 | ----------- | -------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
 | `keepalive` | `boolean`                        | `true`    | Set the Fetch `keepalive` flag when the browser supports it. [Page unload](../guides/page-unload.md) |
 | `timeoutMs` | `number`                         | `10000`   | Per-attempt timeout in ms. `0` disables. [Retries and timeouts](../guides/retries-and-timeouts.md)   |
-| `retry`     | `SamLoggerRetryOptions \| false` | see below | Retry policy. `false` makes one attempt.                                                             |
+| `retry`     | `SomLoggerRetryOptions \| false` | see below | Retry policy. `false` makes one attempt.                                                             |
 
 `retry` fields, all optional:
 
@@ -52,7 +52,7 @@ import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
 | ------------------- | ------- | ------------------------------------------------------ |
 | `maxAttempts`       | `3`     | Total attempts including the first.                    |
 | `initialDelayMs`    | `1000`  | Base backoff delay.                                    |
-| `maxDelayMs`        | `30000` | Backoff cap, and the longest `Retry-After` Sam honors. |
+| `maxDelayMs`        | `30000` | Backoff cap, and the longest `Retry-After` Som honors. |
 | `backoffMultiplier` | `2`     | Growth factor per retry.                               |
 
 ## Payload
@@ -60,12 +60,12 @@ import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
 | Option              | Type               | Default           | Description                                                                  |
 | ------------------- | ------------------ | ----------------- | ---------------------------------------------------------------------------- |
 | `detectResource`    | `boolean`          | `true`            | Add `telemetry.sdk.*`, `user_agent.original`, and `browser.*` attributes.    |
-| `scope`             | `SamLoggerScope`   | `{ name: 'sam' }` | Instrumentation scope. [Resource and scope](../guides/resource-and-scope.md) |
+| `scope`             | `SomLoggerScope`   | `{ name: 'som' }` | Instrumentation scope. [Resource and scope](../guides/resource-and-scope.md) |
 | `resourceSchemaUrl` | `string`           | unset             | Schema URL for the resource.                                                 |
 | `compression`       | `'none' \| 'gzip'` | `'none'`          | Gzip request bodies. [Compression](../guides/compression.md)                 |
-| `limits`            | `SamLoggerLimits`  | see below         | Attribute limits. [Attribute limits](../guides/attribute-limits.md)          |
+| `limits`            | `SomLoggerLimits`  | see below         | Attribute limits. [Attribute limits](../guides/attribute-limits.md)          |
 
-`scope` fields, all optional: `name` (default `'sam'`), `version`, `attributes`, `schemaUrl`.
+`scope` fields, all optional: `name` (default `'som'`), `version`, `attributes`, `schemaUrl`.
 
 `limits` fields, all optional:
 
@@ -80,12 +80,12 @@ import { createSamLogger, type SamLoggerOptions } from 'sam-otel'
 | Option         | Type                                  | Default | Description                                                                                           |
 | -------------- | ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
 | `traceContext` | `() => TraceContext \| undefined`     | unset   | Supplies trace ids for every log. [Trace correlation](../guides/trace-correlation.md)                 |
-| `onDiagnostic` | `(event: SamDiagnosticEvent) => void` | unset   | Observe failed exports, partial success, and dropped records. [Diagnostics](../guides/diagnostics.md) |
+| `onDiagnostic` | `(event: SomDiagnosticEvent) => void` | unset   | Observe failed exports, partial success, and dropped records. [Diagnostics](../guides/diagnostics.md) |
 
 ## Full example
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   serviceVersion: '2.1.0',

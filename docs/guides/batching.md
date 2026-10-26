@@ -5,7 +5,7 @@ title: Batching and flushing
 
 # Batching and flushing
 
-Sam never sends one request per log. Records go into a queue and leave in batches, which keeps the number of requests low.
+Som never sends one request per log. Records go into a queue and leave in batches, which keeps the number of requests low.
 
 ## When a batch is sent
 
@@ -17,7 +17,7 @@ A batch is exported when **either**:
 The timer is not reset by later records. After a batch is sent and more records remain, the timer starts again.
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   batch: {
@@ -49,7 +49,7 @@ Each log call's promise settles with its batch: it resolves when the batch is ex
 await logger.flush()
 ```
 
-`shutdown()` flushes too, and also stops the logger from accepting new records. It removes the page listeners Sam installed (see [Page unload](./page-unload.md)).
+`shutdown()` flushes too, and also stops the logger from accepting new records. It removes the page listeners Som installed (see [Page unload](./page-unload.md)).
 
 ```ts
 await logger.shutdown()
@@ -59,13 +59,13 @@ Both reject if an export fails. If several batches fail, the error is an `Aggreg
 
 ## Queue overflow
 
-The queue is bounded by `maxQueueSize`. A queue fills up when the collector is slow or unreachable while your app keeps logging. Choose how Sam reacts:
+The queue is bounded by `maxQueueSize`. A queue fills up when the collector is slow or unreachable while your app keeps logging. Choose how Som reacts:
 
-- **`'reject-new'`** (default): the new log call rejects with `SamLogger batch queue is full.` and everything already queued is kept. Older logs win.
-- **`'drop-oldest'`**: the oldest queued record is evicted to make room and its promise rejects with `SamLogger batch queue is full; oldest record dropped.` Newer logs win.
+- **`'reject-new'`** (default): the new log call rejects with `SomLogger batch queue is full.` and everything already queued is kept. Older logs win.
+- **`'drop-oldest'`**: the oldest queued record is evicted to make room and its promise rejects with `SomLogger batch queue is full; oldest record dropped.` Newer logs win.
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   batch: { maxQueueSize: 500, overflowStrategy: 'drop-oldest' },
@@ -76,4 +76,4 @@ With either strategy, `logger.droppedRecordCount` returns how many records were 
 
 ## Memory only
 
-The queue lives in memory. Records that are still queued when the page closes without a flush are lost; Sam flushes on page hide to avoid this in normal navigation.
+The queue lives in memory. Records that are still queued when the page closes without a flush are lost; Som flushes on page hide to avoid this in normal navigation.

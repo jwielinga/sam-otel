@@ -10,9 +10,9 @@ title: Recipes
 Create the logger once in its own module and import it everywhere:
 
 ```ts title="logger.ts"
-import { createSamLogger } from 'sam-otel'
+import { createSomLogger } from 'som-otel'
 
-export const logger = createSamLogger({
+export const logger = createSomLogger({
   endpoint: import.meta.env.VITE_LOGS_ENDPOINT,
   serviceName: 'storefront',
   serviceVersion: import.meta.env.VITE_APP_VERSION,
@@ -42,7 +42,7 @@ export function log(message: string, attributes?: Record<string, string>) {
 
 ## Capture uncaught errors
 
-Sam does not install global handlers. Register your own to send uncaught errors and unhandled rejections:
+Som does not install global handlers. Register your own to send uncaught errors and unhandled rejections:
 
 ```ts
 window.addEventListener('error', (event) => {
@@ -64,7 +64,7 @@ window.addEventListener('unhandledrejection', (event) => {
 })
 ```
 
-An `Error` gets `exception.*` attributes automatically. See [Logging errors](./logging-errors.md). The `.catch` also prevents Sam's own export failures from raising new `unhandledrejection` events, which would otherwise log recursively.
+An `Error` gets `exception.*` attributes automatically. See [Logging errors](./logging-errors.md). The `.catch` also prevents Som's own export failures from raising new `unhandledrejection` events, which would otherwise log recursively.
 
 ## Forward `console` output
 
@@ -81,7 +81,7 @@ console.warn = (...args: unknown[]) => {
 
 ## Add context to every log
 
-Sam has no per-logger default attributes. Put stable context in `resourceAttributes`, or wrap the logger:
+Som has no per-logger default attributes. Put stable context in `resourceAttributes`, or wrap the logger:
 
 ```ts
 export const checkoutLog = {
@@ -103,4 +103,4 @@ await logger.info('Checkout completed', { orderId })
 window.location.assign('/thank-you')
 ```
 
-For everything else, Sam's [page-hide flush](./page-unload.md) already runs.
+For everything else, Som's [page-hide flush](./page-unload.md) already runs.

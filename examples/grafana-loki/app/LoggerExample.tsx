@@ -1,10 +1,10 @@
 import { ChevronDown } from 'lucide-react'
 
-const example = `import { createSamLogger, OTelSeverityNumber } from 'sam-otel'
+const example = `import { createSomLogger, OTelSeverityNumber } from 'som-otel'
 
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'http://localhost:4318/v1/logs',
-  serviceName: 'sam-demo',
+  serviceName: 'som-demo',
 })
 
 // Every call returns a promise: it resolves once the batch is exported
@@ -33,7 +33,7 @@ try {
   await logger.error(error as Error, { 'demo.action': 'todo.load' })
 }
 
-// Sam has no logger.fatal(). Send the OTel FATAL severity with logRecord().
+// Som has no logger.fatal(). Send the OTel FATAL severity with logRecord().
 await logger.logRecord({
   severityNumber: OTelSeverityNumber.FATAL,
   severityText: 'FATAL',

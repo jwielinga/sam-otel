@@ -5,16 +5,16 @@ title: Testing
 
 # Testing
 
-You never need a live collector to test code that uses Sam. Inject a `fetcher` that records requests.
+You never need a live collector to test code that uses Som. Inject a `fetcher` that records requests.
 
 ## A recording fetcher
 
 ```ts
-import { createSamLogger } from 'sam-otel'
+import { createSomLogger } from 'som-otel'
 
 const requests: Array<{ url: string; body: unknown }> = []
 
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.test/v1/logs',
   serviceName: 'test-app',
   fetcher: async (input, init) => {
@@ -37,7 +37,7 @@ await logger.info('hello', { userId: 'user-1' })
 - **Simulate failures.** Return `new Response(null, { status: 503 })` or throw from the fetcher, then assert that the log promise rejects:
 
   ```ts
-  const failing = createSamLogger({
+  const failing = createSomLogger({
     endpoint: 'https://collector.test/v1/logs',
     serviceName: 'test-app',
     retry: false,
@@ -50,7 +50,7 @@ await logger.info('hello', { userId: 'user-1' })
 
 - **Fake timers.** Batches sent by the timer, retry backoff, and request timeouts all use `setTimeout`, so they work with your test runner's fake timers.
 - **Shut down.** Call `await logger.shutdown()` in teardown so the logger does not leave page listeners or pending timers behind.
-- **No network in Node.** The `fetcher` option is also what lets Sam run in environments without a global `fetch`.
+- **No network in Node.** The `fetcher` option is also what lets Som run in environments without a global `fetch`.
 
 ## Reading gzip bodies
 

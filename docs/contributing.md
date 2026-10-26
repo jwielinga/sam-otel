@@ -46,4 +46,4 @@ Target `main`. The Quality workflow runs on pull requests and must pass. Use Con
 - `feat!: change logger configuration` or a `BREAKING CHANGE:` footer for a breaking change.
 - `docs: clarify collector setup` or `chore: update tooling` for changes that do not publish a release.
 
-Do not include collector credentials, access tokens, or real user log data in commits, tests, or issues. See the [Security Policy](https://github.com/jwielinga/sam-otel/blob/main/SECURITY.md) for vulnerability reports and [Release Setup](https://github.com/jwielinga/sam-otel/blob/main/RELEASING.md) for maintainer release configuration.
+Do not include collector credentials, access tokens, or real user log data in commits, tests, or issues. See the [Security Policy](https://github.com/jwielinga/som-otel/blob/main/SECURITY.md) for vulnerability reports and [Release Setup](https://github.com/jwielinga/som-otel/blob/main/RELEASING.md) for maintainer release configuration.

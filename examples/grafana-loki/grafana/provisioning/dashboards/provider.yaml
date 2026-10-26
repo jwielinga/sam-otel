@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: Sam example
+  - name: Som example
     orgId: 1
-    folder: Sam example
+    folder: Som example
     type: file
     disableDeletion: false
     editable: true

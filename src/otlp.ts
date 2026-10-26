@@ -13,13 +13,13 @@ import type {
   LogAttributes,
   LogAttributeValue,
   LogSeverity,
-  SamLoggerLimits,
-  SamLoggerScope,
+  SomLoggerLimits,
+  SomLoggerScope,
 } from './sdk.types.js'
 
 export type OtlpLogRecord = OTelJsonLogRecord
 
-export type OtlpLimits = Required<SamLoggerLimits>
+export type OtlpLimits = Required<SomLoggerLimits>
 
 export type OtlpRecordExtras = {
   traceId?: string
@@ -29,7 +29,7 @@ export type OtlpRecordExtras = {
 }
 
 export type OtlpRequestOptions = {
-  scope?: SamLoggerScope
+  scope?: SomLoggerScope
   resourceSchemaUrl?: string
 }
 
@@ -39,7 +39,7 @@ type EncodeContext = {
   ancestors: object[]
 }
 
-const DEFAULT_SCOPE_NAME = 'sam'
+const DEFAULT_SCOPE_NAME = 'som'
 
 export const DEFAULT_LIMITS: OtlpLimits = {
   attributeCountLimit: 128,
@@ -64,7 +64,7 @@ const severityNumbers: Record<LogSeverity, OTelSeverityNumber> = {
 const MIN_INT64 = -(1n << 63n)
 const MAX_INT64 = (1n << 63n) - 1n
 
-export function resolveLimits(limits: SamLoggerLimits = {}): OtlpLimits {
+export function resolveLimits(limits: SomLoggerLimits = {}): OtlpLimits {
   return {
     attributeCountLimit:
       limits.attributeCountLimit ?? DEFAULT_LIMITS.attributeCountLimit,
@@ -299,7 +299,7 @@ export function encodeOtlpLogRecord(
 }
 
 function encodeScope(
-  scope: SamLoggerScope | undefined,
+  scope: SomLoggerScope | undefined,
 ): OTelJsonInstrumentationScope {
   const encoded: OTelJsonInstrumentationScope = {
     name: scope?.name ?? DEFAULT_SCOPE_NAME,

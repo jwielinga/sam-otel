@@ -8,7 +8,7 @@ title: Attribute limits
 Limits keep one careless log call from producing a huge request. They apply to the attributes of every record you log.
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   limits: {
@@ -27,7 +27,7 @@ const logger = createSamLogger({
 
 ## Attribute count
 
-Attributes are kept in the order you wrote them. Once `attributeCountLimit` is reached the rest are dropped, and the record's `droppedAttributesCount` is the number dropped. For `logRecord()`, Sam adds this to any `droppedAttributesCount` you passed.
+Attributes are kept in the order you wrote them. Once `attributeCountLimit` is reached the rest are dropped, and the record's `droppedAttributesCount` is the number dropped. For `logRecord()`, Som adds this to any `droppedAttributesCount` you passed.
 
 ## String length
 

@@ -1,4 +1,4 @@
-name: sam-grafana-loki
+name: som-grafana-loki
 
 services:
   loki:
@@ -34,7 +34,7 @@ services:
     image: grafana/grafana:13.2.0
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: sam-demo-only
+      GF_SECURITY_ADMIN_PASSWORD: som-demo-only
       GF_USERS_ALLOW_SIGN_UP: 'false'
     ports:
       - '3000:3000'

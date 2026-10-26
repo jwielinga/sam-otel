@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OtlpExportError } from './http-exporter.js'
 import type { OTelAnyValue } from './otel.types.js'
 import type { OtlpLogRecord } from './otlp.js'
-import { createSamLogger } from './sdk.js'
-import type { SamLogger } from './logger.js'
-import type { SamDiagnosticEvent, SamLoggerOptions } from './sdk.types.js'
+import { createSomLogger } from './sdk.js'
+import type { SomLogger } from './logger.js'
+import type { SomDiagnosticEvent, SomLoggerOptions } from './sdk.types.js'
 import {
   FakeCollector,
   jsonResponse,
@@ -14,7 +14,7 @@ import {
 import { stubFetchKeepalive } from './test-support/keepalive.js'
 import { traceContextFromApi } from './trace-context.js'
 
-// Every test builds the SDK through createSamLogger and observes it only via the collector.
+// Every test builds the SDK through createSomLogger and observes it only via the collector.
 
 const KEEPALIVE_LIMIT = 63 * 1024
 const slowBatch = { maxBatchSize: 10, scheduledDelayMs: 60_000 }
@@ -29,9 +29,9 @@ afterEach(() => {
 // Fast retries and per-record batches by default; tests override what they exercise.
 function createLogger(
   collector: FakeCollector,
-  options: Partial<SamLoggerOptions> = {},
-): SamLogger {
-  return createSamLogger({
+  options: Partial<SomLoggerOptions> = {},
+): SomLogger {
+  return createSomLogger({
     endpoint: 'https://collector.example/v1/logs',
     serviceName: 'checkout',
     fetcher: collector.fetcher,
@@ -379,7 +379,7 @@ describe('queue overflow', () => {
   it('drops the oldest queued record with drop-oldest', async () => {
     const collector = new FakeCollector()
     const release = collector.hold()
-    const events: SamDiagnosticEvent[] = []
+    const events: SomDiagnosticEvent[] = []
     const logger = createLogger(collector, {
       batch: {
         maxBatchSize: 1,
@@ -428,7 +428,7 @@ describe('queue overflow', () => {
 
 describe('partial success', () => {
   it('reports rejected records without failing or retrying', async () => {
-    const events: SamDiagnosticEvent[] = []
+    const events: SomDiagnosticEvent[] = []
     const collector = new FakeCollector()
     collector.enqueue(
       jsonResponse({
@@ -455,7 +455,7 @@ describe('partial success', () => {
   })
 
   it('stays quiet for a plain success response', async () => {
-    const events: SamDiagnosticEvent[] = []
+    const events: SomDiagnosticEvent[] = []
     const collector = new FakeCollector()
     collector.enqueue(
       jsonResponse({}),
@@ -491,7 +491,7 @@ describe('partial success', () => {
 
 describe('diagnostics', () => {
   it('reports each failed export with its record count', async () => {
-    const events: SamDiagnosticEvent[] = []
+    const events: SomDiagnosticEvent[] = []
     const collector = new FakeCollector()
     collector.setFallback(500)
     const logger = createLogger(collector, {
@@ -653,13 +653,13 @@ describe('timestamps', () => {
 })
 
 describe('scope and schema URLs', () => {
-  it('defaults to the sam scope without schema URLs', async () => {
+  it('defaults to the som scope without schema URLs', async () => {
     const collector = new FakeCollector()
 
     await createLogger(collector).info('x')
 
     const resourceLogs = collector.requests[0]?.payload.resourceLogs[0]
-    expect(resourceLogs?.scopeLogs[0]?.scope).toEqual({ name: 'sam' })
+    expect(resourceLogs?.scopeLogs[0]?.scope).toEqual({ name: 'som' })
     expect(resourceLogs).not.toHaveProperty('schemaUrl')
     expect(resourceLogs?.scopeLogs[0]).not.toHaveProperty('schemaUrl')
   })
@@ -768,7 +768,7 @@ describe('resource detection', () => {
       ]),
     )
     expect(attributes).toMatchObject({
-      'telemetry.sdk.name': { stringValue: 'sam-otel' },
+      'telemetry.sdk.name': { stringValue: 'som-otel' },
       'telemetry.sdk.language': { stringValue: 'webjs' },
       'user_agent.original': { stringValue: 'TestAgent/1' },
       'browser.language': { stringValue: 'nl-NL' },

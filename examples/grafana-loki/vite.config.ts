@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(exampleDir, 'app'),
-      'sam-otel': resolve(exampleDir, '../../dist/sam.js'),
+      'som-otel': resolve(exampleDir, '../../dist/som.js'),
     },
   },
   server: {

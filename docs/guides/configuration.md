@@ -5,12 +5,12 @@ title: Configuration
 
 # Configuration
 
-Create a logger with `createSamLogger(options)`.
+Create a logger with `createSomLogger(options)`.
 
 ```ts
-import { createSamLogger } from 'sam-otel'
+import { createSomLogger } from 'som-otel'
 
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   serviceVersion: '1.0.0',
@@ -25,7 +25,7 @@ Only `endpoint` and `serviceName` are required. Every other option has a default
 
 ## Endpoint
 
-`endpoint` is the complete URL of the collector's OTLP/HTTP logs receiver, for example `https://collector.example.com/v1/logs`. Sam posts to exactly this URL and never adds a path. Use HTTPS in production.
+`endpoint` is the complete URL of the collector's OTLP/HTTP logs receiver, for example `https://collector.example.com/v1/logs`. Som posts to exactly this URL and never adds a path. Use HTTPS in production.
 
 ## Service identity
 
@@ -47,14 +47,14 @@ resourceAttributes: {
 }
 ```
 
-Values use the same [value types](./writing-logs.md#attribute-values) as log attributes. Sam also adds browser attributes by default; see [Resource and scope](./resource-and-scope.md).
+Values use the same [value types](./writing-logs.md#attribute-values) as log attributes. Som also adds browser attributes by default; see [Resource and scope](./resource-and-scope.md).
 
 ## Request headers
 
 Use `headers` for headers the collector expects on every request, such as authorization:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   headers: {
@@ -63,7 +63,7 @@ const logger = createSamLogger({
 })
 ```
 
-Your headers are added after Sam's own `Content-Type` (and `Content-Encoding` when compressing), so a header you set can override those.
+Your headers are added after Som's own `Content-Type` (and `Content-Encoding` when compressing), so a header you set can override those.
 
 :::warning Everything in the bundle is public
 
@@ -78,7 +78,7 @@ Custom headers make the browser send a CORS preflight request. The collector mus
 `fetcher` replaces the global `fetch`. Use it for tests, for instrumented fetch implementations, or in environments without a global `fetch`:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   fetcher: myFetch,
@@ -89,7 +89,7 @@ It must follow the standard Fetch API signature and return a `Response`. See [Te
 
 ## Construction errors
 
-Sam validates a few things when you create the logger and throws a `TypeError` immediately:
+Som validates a few things when you create the logger and throws a `TypeError` immediately:
 
 | Problem                            | Message                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------- |

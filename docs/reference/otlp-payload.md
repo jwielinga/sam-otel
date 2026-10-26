@@ -5,7 +5,7 @@ title: OTLP payload
 
 # OTLP payload
 
-This page shows exactly what Sam sends, which helps when you test, debug a collector, or write a custom receiver.
+This page shows exactly what Som sends, which helps when you test, debug a collector, or write a custom receiver.
 
 ## The request
 
@@ -18,7 +18,7 @@ This page shows exactly what Sam sends, which helps when you test, debug a colle
 For this code:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   serviceVersion: '2.1.0',
@@ -28,7 +28,7 @@ const logger = createSamLogger({
 await logger.info('Checkout completed', { orderId: 'order-42', total: 12.5 })
 ```
 
-Sam sends:
+Som sends:
 
 ```json
 {
@@ -42,7 +42,7 @@ Sam sends:
       },
       "scopeLogs": [
         {
-          "scope": { "name": "sam" },
+          "scope": { "name": "som" },
           "logRecords": [
             {
               "timeUnixNano": "1791201600000000000",
@@ -80,4 +80,4 @@ Sam sends:
 
 ## Partial success responses
 
-A `200` JSON response can carry `{"partialSuccess": {"rejectedLogRecords": "2", "errorMessage": "…"}}`. Sam surfaces it as a [`partial-success` diagnostic](../guides/diagnostics.md).
+A `200` JSON response can carry `{"partialSuccess": {"rejectedLogRecords": "2", "errorMessage": "…"}}`. Som surfaces it as a [`partial-success` diagnostic](../guides/diagnostics.md).

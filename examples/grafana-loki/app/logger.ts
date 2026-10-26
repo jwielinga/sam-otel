@@ -1,8 +1,8 @@
-import { createSamLogger } from 'sam-otel'
+import { createSomLogger } from 'som-otel'
 
-export const SERVICE_NAME = 'sam-demo'
+export const SERVICE_NAME = 'som-demo'
 
-export const logger = createSamLogger({
+export const logger = createSomLogger({
   endpoint:
     import.meta.env.VITE_OTLP_ENDPOINT ?? 'http://localhost:4318/v1/logs',
   serviceName: SERVICE_NAME,
@@ -14,6 +14,6 @@ export const logger = createSamLogger({
   batch: { maxBatchSize: 2, scheduledDelayMs: 250 },
   retry: false,
   onDiagnostic: (event) => {
-    if (import.meta.env.DEV) console.debug('[sam]', event)
+    if (import.meta.env.DEV) console.debug('[som]', event)
   },
 })

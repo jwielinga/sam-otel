@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "paths": {
       "@/*": ["./*"],
-      "sam-otel": ["../../../dist/types/index.d.ts"]
+      "som-otel": ["../../../dist/types/index.d.ts"]
     }
   },
   "include": ["."]
