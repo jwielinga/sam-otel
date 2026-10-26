@@ -1,6 +1,6 @@
 # Sam
 
-Sam is a lightweight browser-side TypeScript npm package for sending OpenTelemetry logs to an OTLP/HTTP collector. It is meant to provide a simple, elegant solution to debug sessions on your web app. It is not for tracking user behaviour for marketing purposes.
+Sam is a lightweight browser-side TypeScript npm package for sending OpenTelemetry logs to an OTLP/HTTP collector. It is meant to provide a simple, elegant solution to debug sessions on your web app. It is not for tracking user behaviour or for marketing purposes.
 
 ## Quick Start
 
