@@ -5,16 +5,16 @@ title: Page unload
 
 # Page unload
 
-When a user closes a tab or navigates away, a normal request can be cancelled before it finishes. Sam uses two mechanisms to give queued logs a chance to arrive.
+When a user closes a tab or navigates away, a normal request can be cancelled before it finishes. Som uses two mechanisms to give queued logs a chance to arrive.
 
 ## Automatic flush on page hide
 
-In a browser, Sam registers listeners when you create the logger:
+In a browser, Som registers listeners when you create the logger:
 
 - `pagehide`, when the page is being unloaded or put in the back/forward cache.
 - `visibilitychange`, when the page becomes hidden (tab switch, minimize, app switch on mobile).
 
-When either fires, Sam sends everything queued **immediately**:
+When either fires, Som sends everything queued **immediately**:
 
 - Requests start synchronously inside the event handler.
 - It does not wait for an earlier request that is still in flight.
@@ -25,22 +25,22 @@ Outside a browser, for example in Node.js, no listeners are registered. `shutdow
 
 ## Fetch keepalive
 
-Sam sets the Fetch `keepalive` flag on requests so the browser can finish them after the page is gone. It is on by default:
+Som sets the Fetch `keepalive` flag on requests so the browser can finish them after the page is gone. It is on by default:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   keepalive: false, // opt out
 })
 ```
 
-Sam only sets the flag when the browser supports it. Otherwise it sends plain requests, which the browser may cancel during unload.
+Som only sets the flag when the browser supports it. Otherwise it sends plain requests, which the browser may cancel during unload.
 
 ### Browser limits
 
-- **Support.** Browsers without Fetch `keepalive` (for example Firefox before 133, and very old Chrome and Safari) ignore the flag. Sam detects this and sends normal requests, so unload delivery is not guaranteed there.
-- **Size.** Browsers cap in-flight keepalive request bodies at 64 KiB. Sam stays below it: it omits the flag for a larger normal batch, and it splits unload batches. A single record that alone exceeds the limit is sent without `keepalive`.
+- **Support.** Browsers without Fetch `keepalive` (for example Firefox before 133, and very old Chrome and Safari) ignore the flag. Som detects this and sends normal requests, so unload delivery is not guaranteed there.
+- **Size.** Browsers cap in-flight keepalive request bodies at 64 KiB. Som stays below it: it omits the flag for a larger normal batch, and it splits unload batches. A single record that alone exceeds the limit is sent without `keepalive`.
 - **Preflight.** Keepalive requests with custom headers such as `Authorization` trigger a CORS preflight. The collector must answer it, and the browser may not finish the preflight if the page is already closing. Avoid custom headers if unload delivery matters.
 
 :::info About `Connection: keep-alive`

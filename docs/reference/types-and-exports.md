@@ -8,15 +8,15 @@ title: Types and exports
 Everything is exported from the package root:
 
 ```ts
-import { createSamLogger } from 'sam-otel'
-import type { SamLoggerOptions } from 'sam-otel'
+import { createSomLogger } from 'som-otel'
+import type { SomLoggerOptions } from 'som-otel'
 ```
 
 ## Values
 
 | Export                | Description                                                                                |
 | --------------------- | ------------------------------------------------------------------------------------------ |
-| `createSamLogger`     | Factory returning a `SamLogger`. The only way to create a logger.                          |
+| `createSomLogger`     | Factory returning a `SomLogger`. The only way to create a logger.                          |
 | `OtlpExportError`     | Error thrown for export failures, with `status`, `retryable`, and `retryAfterMs`.          |
 | `OtlpHttpExporter`    | Low-level transport. See [Logger API](./logger-api.md#otlphttpexporter).                   |
 | `traceContextFromApi` | Adapter for `@opentelemetry/api`. See [Trace correlation](../guides/trace-correlation.md). |
@@ -41,15 +41,15 @@ The type `OTelSeverityNumber` is the union of these numbers.
 
 | Type                      | Used for                                          |
 | ------------------------- | ------------------------------------------------- |
-| `SamLogger`               | The type of the logger `createSamLogger` returns. |
-| `SamLoggerOptions`        | The argument of `createSamLogger`.                |
-| `SamLoggerBatchOptions`   | `batch`.                                          |
-| `SamLoggerRetryOptions`   | `retry`.                                          |
-| `SamLoggerScope`          | `scope`.                                          |
-| `SamLoggerLimits`         | `limits`.                                         |
+| `SomLogger`               | The type of the logger `createSomLogger` returns. |
+| `SomLoggerOptions`        | The argument of `createSomLogger`.                |
+| `SomLoggerBatchOptions`   | `batch`.                                          |
+| `SomLoggerRetryOptions`   | `retry`.                                          |
+| `SomLoggerScope`          | `scope`.                                          |
+| `SomLoggerLimits`         | `limits`.                                         |
 | `TraceContext`            | The value a `traceContext` provider returns.      |
 | `TraceContextProvider`    | The type of `traceContext`.                       |
-| `SamDiagnosticEvent`      | The argument of `onDiagnostic`.                   |
+| `SomDiagnosticEvent`      | The argument of `onDiagnostic`.                   |
 | `OtlpHttpExporterOptions` | Options of `OtlpHttpExporter`.                    |
 | `OTelApiLike`             | Argument of `traceContextFromApi`.                |
 

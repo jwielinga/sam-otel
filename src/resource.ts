@@ -8,7 +8,7 @@ type NavigatorUAData = {
 
 export function detectResourceAttributes(): Record<string, OTelAnyValue> {
   const attributes: Record<string, OTelAnyValue> = {
-    'telemetry.sdk.name': 'sam-otel',
+    'telemetry.sdk.name': 'som-otel',
     'telemetry.sdk.language': 'webjs',
   }
 

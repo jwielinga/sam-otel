@@ -26,7 +26,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(count_over_time({service_name=\"sam-demo\"}[1m]))",
+          "expr": "sum(count_over_time({service_name=\"som-demo\"}[1m]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -51,7 +51,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "{service_name=\"sam-demo\"}",
+          "expr": "{service_name=\"som-demo\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -62,11 +62,11 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["sam", "browser", "logs"],
+  "tags": ["som", "browser", "logs"],
   "templating": { "list": [] },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "browser",
   "title": "Browser Logs",
-  "uid": "sam-browser-logs",
+  "uid": "som-browser-logs",
   "version": 1
 }

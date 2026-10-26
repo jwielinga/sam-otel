@@ -1,8 +1,8 @@
 {
-  "name": "sam-otel-docs",
+  "name": "som-otel-docs",
   "version": "0.0.0",
   "private": true,
-  "description": "Documentation site for sam-otel, published to GitHub Pages",
+  "description": "Documentation site for som-otel, published to GitHub Pages",
   "packageManager": "pnpm@8.6.12",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

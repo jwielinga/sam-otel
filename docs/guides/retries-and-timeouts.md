@@ -5,7 +5,7 @@ title: Retries and timeouts
 
 # Retries and timeouts
 
-Sam retries failed exports before it rejects your log promises.
+Som retries failed exports before it rejects your log promises.
 
 ## What is retried
 
@@ -20,16 +20,16 @@ These are the statuses the OTLP/HTTP specification defines as retryable. Other e
 
 ## Backoff
 
-Between attempts Sam waits with **exponential backoff and jitter**. The delay before retry `n` (starting at 1) is between half of and the full value of `min(maxDelayMs, initialDelayMs × backoffMultiplier^(n - 1))`.
+Between attempts Som waits with **exponential backoff and jitter**. The delay before retry `n` (starting at 1) is between half of and the full value of `min(maxDelayMs, initialDelayMs × backoffMultiplier^(n - 1))`.
 
 With the defaults that is about 0.5–1 s before the first retry and 1–2 s before the second.
 
-If the collector sends a `Retry-After` header (seconds or an HTTP date), Sam waits exactly that long instead. If the requested pause is longer than `retry.maxDelayMs`, Sam does not wait on it and gives up.
+If the collector sends a `Retry-After` header (seconds or an HTTP date), Som waits exactly that long instead. If the requested pause is longer than `retry.maxDelayMs`, Som does not wait on it and gives up.
 
 ## Configuring retries
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   timeoutMs: 10_000,
@@ -55,13 +55,13 @@ Set `retry: false` to make a single attempt.
 
 ## Timeouts
 
-`timeoutMs` (default `10000`) limits **each attempt**. When it expires Sam aborts the request through an `AbortSignal` and treats it as a retryable failure. Set `timeoutMs: 0` to disable the timeout.
+`timeoutMs` (default `10000`) limits **each attempt**. When it expires Som aborts the request through an `AbortSignal` and treats it as a retryable failure. Set `timeoutMs: 0` to disable the timeout.
 
 Because a flush waits for its retries, an unreachable collector delays the next batch by up to `maxAttempts` timeouts plus backoff. Lower `timeoutMs` or `maxAttempts` if you need to fail faster; the [queue](./batching.md#queue-overflow) absorbs logs in the meantime.
 
 ## When retries run out
 
-The log promises of the failed batch reject with the **last** error, and `onDiagnostic` receives an `export-failed` event. The records are not kept: Sam does not retry beyond `maxAttempts`, and retries only cover the current page session.
+The log promises of the failed batch reject with the **last** error, and `onDiagnostic` receives an `export-failed` event. The records are not kept: Som does not retry beyond `maxAttempts`, and retries only cover the current page session.
 
 ## `OtlpExportError`
 
@@ -76,7 +76,7 @@ Export failures reject with an `OtlpExportError`:
 | `cause`        | The original error for network failures.                                                                                                       |
 
 ```ts
-import { OtlpExportError } from 'sam-otel'
+import { OtlpExportError } from 'som-otel'
 
 try {
   await logger.error('Payment failed')
@@ -89,6 +89,6 @@ try {
 
 ## Partial success
 
-A collector can accept a request but reject some of its records, and still answer `200`. Sam never retries these, because the same records would be rejected again. It reports them as a `partial-success` [diagnostic](./diagnostics.md) with `rejectedLogRecords` and, when given, `errorMessage`. The log promises resolve.
+A collector can accept a request but reject some of its records, and still answer `200`. Som never retries these, because the same records would be rejected again. It reports them as a `partial-success` [diagnostic](./diagnostics.md) with `rejectedLogRecords` and, when given, `errorMessage`. The log promises resolve.
 
-Sam reads partial success from JSON responses (`Content-Type: application/json`).
+Som reads partial success from JSON responses (`Content-Type: application/json`).

@@ -139,7 +139,7 @@ describe('encodeOtlpLogRecord', () => {
 })
 
 describe('createOtlpLogsRequest', () => {
-  it('wraps records with resource attributes and the sam scope', () => {
+  it('wraps records with resource attributes and the som scope', () => {
     const logRecord = createOtlpLogRecord('info', 'x', {})
 
     expect(
@@ -152,7 +152,7 @@ describe('createOtlpLogsRequest', () => {
               { key: 'service.name', value: { stringValue: 'checkout' } },
             ],
           },
-          scopeLogs: [{ scope: { name: 'sam' }, logRecords: [logRecord] }],
+          scopeLogs: [{ scope: { name: 'som' }, logRecords: [logRecord] }],
         },
       ],
     })

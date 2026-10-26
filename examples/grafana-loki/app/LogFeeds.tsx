@@ -27,7 +27,7 @@ export function LogFeeds({
 
   return (
     <section className="feeds">
-      <LogFeed title="Sent from this browser" note="Sam → Alloy">
+      <LogFeed title="Sent from this browser" note="Som → Alloy">
         {sent.map((item) => (
           <li className="row" key={item.id}>
             <SeverityLabel severity={item.severity} />
@@ -55,7 +55,7 @@ export function LogFeeds({
         empty={
           lokiError
             ? `Cannot query Loki: ${lokiError}`
-            : 'No logs from sam-demo in the last 15 minutes.'
+            : 'No logs from som-demo in the last 15 minutes.'
         }
       >
         {lokiEntries.slice(0, 12).map((entry) => (

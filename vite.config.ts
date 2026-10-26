@@ -4,9 +4,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'Sam',
+      name: 'Som',
       formats: ['es'],
-      fileName: 'sam',
+      fileName: 'som',
     },
   },
 })

@@ -67,7 +67,7 @@ The body can be any of these values too, not just a string:
 await logger.info({ message: 'Payment failed', retryable: false })
 ```
 
-### Values Sam rejects
+### Values Som rejects
 
 Two values cannot be represented in OTLP. The log call's promise **rejects** with a `TypeError`, and the logger keeps working:
 
@@ -76,7 +76,7 @@ Two values cannot be represented in OTLP. The log call's promise **rejects** wit
 
 The message names the offending key. Nested keys are dotted, for example `shipping.cost`.
 
-### Values Sam rewrites
+### Values Som rewrites
 
 - Circular references become the string `[Circular]`.
 - Values nested deeper than `limits.maxValueDepth` become `[MaxDepthExceeded]`.
@@ -104,14 +104,14 @@ try {
 
 If you do not await it, handle the rejection yourself or the browser reports an unhandled promise rejection when an export fails. See [Fire-and-forget logging](./recipes.md#fire-and-forget-logging).
 
-After `shutdown()`, new log calls reject with `SamLogger has been shut down.`
+After `shutdown()`, new log calls reject with `SomLogger has been shut down.`
 
 ## Raw records with `logRecord()`
 
 Use `logRecord()` when you need explicit timestamps, a specific OTel severity, trace correlation, flags, a dropped-attribute count, or an event name:
 
 ```ts
-import { OTelSeverityNumber } from 'sam-otel'
+import { OTelSeverityNumber } from 'som-otel'
 
 await logger.logRecord({
   timeUnixNano: BigInt(Date.now()) * 1_000_000n,
@@ -135,7 +135,7 @@ The record type is `OTelLogRecord`. All fields are optional:
 | `severityText`           | `string`                | Free text such as `'ERROR'`.                                       |
 | `body`                   | any value               |                                                                    |
 | `attributes`             | `Record<string, value>` | Subject to [attribute limits](./attribute-limits.md).              |
-| `droppedAttributesCount` | `number`                | Added to the count of attributes Sam drops itself.                 |
+| `droppedAttributesCount` | `number`                | Added to the count of attributes Som drops itself.                 |
 | `flags`                  | `number`                | Trace flags in the low 8 bits.                                     |
 | `traceId`, `spanId`      | `string`                | Lowercase hex, 32 and 16 characters.                               |
 | `eventName`              | `string`                | Marks the record as an event.                                      |

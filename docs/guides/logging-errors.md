@@ -7,7 +7,7 @@ title: Logging errors
 
 ## Error as the body
 
-Pass an `Error` as the body and Sam builds a useful record for you:
+Pass an `Error` as the body and Som builds a useful record for you:
 
 ```ts
 try {
@@ -35,7 +35,7 @@ If you pass an attribute with the same name as an `exception.*` attribute, yours
 
 ### Error types
 
-`exception.type` is `error.name` when it was changed from the default `'Error'` (for example `'TypeError'` or `'AbortError'`). For a subclass that keeps the default name, Sam uses the class name:
+`exception.type` is `error.name` when it was changed from the default `'Error'` (for example `'TypeError'` or `'AbortError'`). For a subclass that keeps the default name, Som uses the class name:
 
 ```ts
 class PaymentDeclinedError extends Error {}
@@ -69,4 +69,4 @@ The stack trace is an attribute, so `limits.attributeValueLengthLimit` truncates
 
 ## Automatic error capture
 
-Sam does not install global error handlers. [Recipes](./recipes.md#capture-uncaught-errors) shows how to send uncaught errors and unhandled rejections with a few lines.
+Som does not install global error handlers. [Recipes](./recipes.md#capture-uncaught-errors) shows how to send uncaught errors and unhandled rejections with a few lines.

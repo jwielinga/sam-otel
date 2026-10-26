@@ -17,7 +17,7 @@ import type {
   TraceContextProvider,
 } from './sdk.types.js'
 
-export type SamLoggerInit = {
+export type SomLoggerInit = {
   limits?: OtlpLimits
   traceContext?: TraceContextProvider
   onShutdown?: () => void
@@ -25,14 +25,14 @@ export type SamLoggerInit = {
 
 const TRACE_FLAGS_MASK = 0xff
 
-export class SamLogger {
+export class SomLogger {
   private readonly batcher: LogBatcher<OtlpLogRecord>
   private readonly limits: OtlpLimits
   private readonly traceContext: TraceContextProvider | undefined
   private readonly onShutdown: (() => void) | undefined
   private isShutdown = false
 
-  constructor(batcher: LogBatcher<OtlpLogRecord>, options: SamLoggerInit = {}) {
+  constructor(batcher: LogBatcher<OtlpLogRecord>, options: SomLoggerInit = {}) {
     this.batcher = batcher
     this.limits = options.limits ?? DEFAULT_LIMITS
     this.traceContext = options.traceContext
@@ -104,7 +104,7 @@ export class SamLogger {
 
   private enqueueRecord(createRecord: () => OtlpLogRecord): Promise<void> {
     if (this.isShutdown) {
-      return Promise.reject(new Error('SamLogger has been shut down.'))
+      return Promise.reject(new Error('SomLogger has been shut down.'))
     }
 
     // The executor runs synchronously, so the record is queued before flush()/shutdown().

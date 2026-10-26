@@ -26,7 +26,7 @@ This Code of Conduct applies to all project spaces, including the repository, is
 
 Maintainers may edit or remove comments, commits, issues, and other contributions that violate this Code of Conduct, and may temporarily or permanently ban contributors for behavior they consider inappropriate, threatening, or harmful.
 
-To report a violation, use [GitHub's private vulnerability reporting](https://github.com/jwielinga/sam-otel/security/advisories/new) or contact the maintainer through their GitHub profile. Reports are handled confidentially. Do not disclose security vulnerabilities in public issues; see the [Security Policy](SECURITY.md).
+To report a violation, use [GitHub's private vulnerability reporting](https://github.com/jwielinga/som-otel/security/advisories/new) or contact the maintainer through their GitHub profile. Reports are handled confidentially. Do not disclose security vulnerabilities in public issues; see the [Security Policy](SECURITY.md).
 
 ## Attribution
 

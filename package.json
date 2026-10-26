@@ -1,5 +1,5 @@
 {
-  "name": "sam-otel",
+  "name": "som-otel",
   "version": "0.1.0",
   "description": "Lightweight browser SDK for sending OpenTelemetry logs over OTLP/HTTP",
   "type": "module",
@@ -10,10 +10,10 @@
   "author": "J Wielinga",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jwielinga/sam-otel.git"
+    "url": "https://github.com/jwielinga/som-otel.git"
   },
   "license": "EUPL-1.2",
-  "homepage": "https://jwielinga.github.io/sam-otel/",
+  "homepage": "https://jwielinga.github.io/som-otel/",
   "files": [
     "dist",
     "LICENSE.txt",
@@ -25,7 +25,7 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/sam.js"
+      "import": "./dist/som.js"
     }
   },
   "scripts": {

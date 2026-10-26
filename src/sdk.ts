@@ -1,20 +1,20 @@
 import { LogBatcher } from './batcher.js'
 import { isFetchKeepaliveSupported, OtlpHttpExporter } from './http-exporter.js'
-import { SamLogger } from './logger.js'
+import { SomLogger } from './logger.js'
 import { resolveLimits, type OtlpLogRecord } from './otlp.js'
 import { detectResourceAttributes } from './resource.js'
 import { resolveRetryPolicy } from './retry.js'
 import type {
   LogAttributes,
-  SamDiagnosticEvent,
-  SamLoggerOptions,
+  SomDiagnosticEvent,
+  SomLoggerOptions,
 } from './sdk.types.js'
 
 const DEFAULT_TIMEOUT_MS = 10_000
 
-type Emit = (event: SamDiagnosticEvent) => void
+type Emit = (event: SomDiagnosticEvent) => void
 
-function createResourceAttributes(options: SamLoggerOptions): LogAttributes {
+function createResourceAttributes(options: SomLoggerOptions): LogAttributes {
   return {
     ...((options.detectResource ?? true) ? detectResourceAttributes() : {}),
     ...options.resourceAttributes,
@@ -25,7 +25,7 @@ function createResourceAttributes(options: SamLoggerOptions): LogAttributes {
   }
 }
 
-function createEmitter(options: SamLoggerOptions): Emit {
+function createEmitter(options: SomLoggerOptions): Emit {
   return (event) => {
     try {
       options.onDiagnostic?.(event)
@@ -36,7 +36,7 @@ function createEmitter(options: SamLoggerOptions): Emit {
 }
 
 function createExporter(
-  options: SamLoggerOptions,
+  options: SomLoggerOptions,
   emit: Emit,
 ): OtlpHttpExporter {
   const fetcher = options.fetcher ?? globalThis.fetch
@@ -63,7 +63,7 @@ function createExporter(
 }
 
 function createBatcher(
-  options: SamLoggerOptions,
+  options: SomLoggerOptions,
   exporter: OtlpHttpExporter,
   emit: Emit,
 ): LogBatcher<OtlpLogRecord> {
@@ -123,7 +123,7 @@ function flushOnPageUnload(batcher: LogBatcher<OtlpLogRecord>): () => void {
   }
 }
 
-export function createSamLogger(options: SamLoggerOptions): SamLogger {
+export function createSomLogger(options: SomLoggerOptions): SomLogger {
   if (!options.endpoint.trim()) {
     throw new TypeError('endpoint must be a non-empty string.')
   }
@@ -135,7 +135,7 @@ export function createSamLogger(options: SamLoggerOptions): SamLogger {
   const exporter = createExporter(options, emit)
   const batcher = createBatcher(options, exporter, emit)
 
-  return new SamLogger(batcher, {
+  return new SomLogger(batcher, {
     limits: resolveLimits(options.limits),
     traceContext: options.traceContext,
     onShutdown: flushOnPageUnload(batcher),

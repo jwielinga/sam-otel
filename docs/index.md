@@ -4,14 +4,14 @@ sidebar_position: 1
 title: Introduction
 ---
 
-# Sam
+# Som
 
-Sam (`sam-otel`) is a small, browser-first TypeScript library that sends [OpenTelemetry](https://opentelemetry.io/) **logs** to any collector that speaks OTLP/HTTP. It is a library, not an application: it has no UI, and it never collects anything on its own. Your code decides what to log.
+Som (`som-otel`) is a small, browser-first TypeScript library that sends [OpenTelemetry](https://opentelemetry.io/) **logs** to any collector that speaks OTLP/HTTP. It is a library, not an application: it has no UI, and it never collects anything on its own. Your code decides what to log.
 
 ```ts
-import { createSamLogger } from 'sam-otel'
+import { createSomLogger } from 'som-otel'
 
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
 })
@@ -30,7 +30,7 @@ await logger.info('Checkout completed', { orderId: 'order-42', total: 12.5 })
 - **Observability of the SDK itself.** An `onDiagnostic` callback reports failed exports, partial success, and dropped records. See [Diagnostics](./guides/diagnostics.md).
 - **Easy to test.** Inject your own `fetch` to run without a collector. See [Testing](./guides/testing.md).
 
-## What Sam is not
+## What Som is not
 
 - It sends **logs only**: no traces and no metrics.
 - It does not capture `console` output, uncaught errors, or navigation automatically. [Recipes](./guides/recipes.md) shows how to wire those up yourself.

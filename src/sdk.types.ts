@@ -21,7 +21,7 @@ export type LogOptions = { eventName?: string } & (
   TraceContext | { traceId?: never; spanId?: never; traceFlags?: never }
 )
 
-export type SamLoggerBatchOptions = {
+export type SomLoggerBatchOptions = {
   maxBatchSize?: number
   maxQueueSize?: number
   scheduledDelayMs?: number
@@ -29,7 +29,7 @@ export type SamLoggerBatchOptions = {
   overflowStrategy?: 'reject-new' | 'drop-oldest'
 }
 
-export type SamLoggerRetryOptions = {
+export type SomLoggerRetryOptions = {
   // Total attempts including the first. Default 3.
   maxAttempts?: number
   initialDelayMs?: number
@@ -37,14 +37,14 @@ export type SamLoggerRetryOptions = {
   backoffMultiplier?: number
 }
 
-export type SamLoggerScope = {
+export type SomLoggerScope = {
   name?: string
   version?: string
   attributes?: LogAttributes
   schemaUrl?: string
 }
 
-export type SamLoggerLimits = {
+export type SomLoggerLimits = {
   // Default 128. Excess attributes are dropped and counted in droppedAttributesCount.
   attributeCountLimit?: number
   // Default unlimited. Longer string attribute values are truncated.
@@ -53,7 +53,7 @@ export type SamLoggerLimits = {
   maxValueDepth?: number
 }
 
-export type SamDiagnosticEvent =
+export type SomDiagnosticEvent =
   | { type: 'export-failed'; error: unknown; recordCount: number }
   | {
       type: 'partial-success'
@@ -62,26 +62,26 @@ export type SamDiagnosticEvent =
     }
   | { type: 'records-dropped'; reason: 'queue-full'; totalDropped: number }
 
-export type SamLoggerOptions = {
+export type SomLoggerOptions = {
   endpoint: string
   serviceName: string
   serviceVersion?: string
   resourceAttributes?: LogAttributes
   headers?: Readonly<Record<string, string>>
-  batch?: SamLoggerBatchOptions
+  batch?: SomLoggerBatchOptions
   fetcher?: typeof fetch
   keepalive?: boolean
   // Default true. Adds telemetry.sdk.*, user_agent.original, and browser.* attributes.
   detectResource?: boolean
-  scope?: SamLoggerScope
+  scope?: SomLoggerScope
   resourceSchemaUrl?: string
   // Default 'none'. Falls back to uncompressed where CompressionStream is missing.
   compression?: 'none' | 'gzip'
   // Per-attempt request timeout. Default 10000; 0 disables.
   timeoutMs?: number
   // Default retries up to 3 attempts; false disables.
-  retry?: SamLoggerRetryOptions | false
-  limits?: SamLoggerLimits
+  retry?: SomLoggerRetryOptions | false
+  limits?: SomLoggerLimits
   traceContext?: TraceContextProvider
-  onDiagnostic?: (event: SamDiagnosticEvent) => void
+  onDiagnostic?: (event: SomDiagnosticEvent) => void
 }

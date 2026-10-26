@@ -37,7 +37,7 @@ TypeScript enforces that `traceId` and `spanId` are given together, and that `tr
 
 :::note No format checks at runtime
 
-Sam trusts the types and does not validate id formats. Pass lowercase hex strings of the right length, or the collector may reject the record.
+Som trusts the types and does not validate id formats. Pass lowercase hex strings of the right length, or the collector may reject the record.
 
 :::
 
@@ -46,7 +46,7 @@ Sam trusts the types and does not validate id formats. Pass lowercase hex string
 Set `traceContext` to attach the active trace to **every** log automatically. It is a function that returns `{ traceId, spanId, traceFlags? }`, or `undefined` when there is no active trace:
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   traceContext: () =>
@@ -58,7 +58,7 @@ const logger = createSamLogger({
 })
 ```
 
-Sam calls the provider each time it builds a record. Explicit trace fields on a call always win over the provider, and a provider is skipped when an explicit `traceId` is given.
+Som calls the provider each time it builds a record. Explicit trace fields on a call always win over the provider, and a provider is skipped when an explicit `traceId` is given.
 
 ### With `@opentelemetry/api`
 
@@ -66,16 +66,16 @@ Sam calls the provider each time it builds a record. Explicit trace fields on a 
 
 ```ts
 import { context, trace } from '@opentelemetry/api'
-import { createSamLogger, traceContextFromApi } from 'sam-otel'
+import { createSomLogger, traceContextFromApi } from 'som-otel'
 
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   traceContext: traceContextFromApi({ trace, context }),
 })
 ```
 
-It reads the span context of the currently active OpenTelemetry context on every log. Sam does not depend on `@opentelemetry/api`; you pass the objects in.
+It reads the span context of the currently active OpenTelemetry context on every log. Som does not depend on `@opentelemetry/api`; you pass the objects in.
 
 ## Raw records
 

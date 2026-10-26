@@ -18,7 +18,7 @@ describe('detectResourceAttributes', () => {
     })
 
     expect(detectResourceAttributes()).toEqual({
-      'telemetry.sdk.name': 'sam-otel',
+      'telemetry.sdk.name': 'som-otel',
       'telemetry.sdk.language': 'webjs',
       'user_agent.original': 'Mozilla/5.0 Test',
       'browser.language': 'nl-NL',
@@ -32,7 +32,7 @@ describe('detectResourceAttributes', () => {
     vi.stubGlobal('navigator', undefined)
 
     expect(detectResourceAttributes()).toEqual({
-      'telemetry.sdk.name': 'sam-otel',
+      'telemetry.sdk.name': 'som-otel',
       'telemetry.sdk.language': 'webjs',
     })
   })

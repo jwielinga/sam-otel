@@ -1,4 +1,4 @@
-import type { SamLoggerBatchOptions } from './sdk.types.js'
+import type { SomLoggerBatchOptions } from './sdk.types.js'
 
 const DEFAULT_MAX_BATCH_SIZE = 20
 const DEFAULT_MAX_QUEUE_SIZE = 1_000
@@ -10,7 +10,7 @@ type PendingItem<T> = {
   reject: (error: unknown) => void
 }
 
-export type LogBatcherOptions<T> = SamLoggerBatchOptions & {
+export type LogBatcherOptions<T> = SomLoggerBatchOptions & {
   sendBatch: (items: readonly T[]) => Promise<void>
   // Used by flushOnUnload(); defaults to sendBatch.
   sendBatchOnUnload?: (items: readonly T[]) => Promise<void>
@@ -55,7 +55,7 @@ export class LogBatcher<T> {
     if (this.pendingItems.length >= this.maxQueueSize) {
       if (this.overflowStrategy === 'reject-new') {
         this.recordDrop()
-        return Promise.reject(new Error('SamLogger batch queue is full.'))
+        return Promise.reject(new Error('SomLogger batch queue is full.'))
       }
       this.dropOldest()
     }
@@ -156,7 +156,7 @@ export class LogBatcher<T> {
     const oldest = this.pendingItems.shift()
     this.recordDrop()
     oldest?.reject(
-      new Error('SamLogger batch queue is full; oldest record dropped.'),
+      new Error('SomLogger batch queue is full; oldest record dropped.'),
     )
   }
 

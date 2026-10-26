@@ -8,7 +8,7 @@ title: Diagnostics
 Most failures happen in the background, after your log call has already returned: a batch fails to export, the queue overflows, the collector rejects part of a request. Log promises report some of these, but a fire-and-forget call has nobody listening. `onDiagnostic` gives you one place to observe them all.
 
 ```ts
-const logger = createSamLogger({
+const logger = createSomLogger({
   endpoint: 'https://collector.example.com/v1/logs',
   serviceName: 'storefront',
   onDiagnostic(event) {
@@ -30,7 +30,7 @@ const logger = createSamLogger({
 })
 ```
 
-`SamDiagnosticEvent` is a discriminated union, so TypeScript narrows each event by its `type`.
+`SomDiagnosticEvent` is a discriminated union, so TypeScript narrows each event by its `type`.
 
 ## Events
 
@@ -44,7 +44,7 @@ const logger = createSamLogger({
 
 ## Safe by design
 
-- Sam calls your callback synchronously and ignores anything it throws, so a bug in diagnostics code never breaks logging.
+- Som calls your callback synchronously and ignores anything it throws, so a bug in diagnostics code never breaks logging.
 - Keep the callback fast and avoid logging from it with the same logger, which can create a loop when exports keep failing.
 
 ## Other signals
@@ -58,6 +58,6 @@ Print diagnostics only while developing (this example uses Vite's `import.meta.e
 
 ```ts
 onDiagnostic: (event) => {
-  if (import.meta.env.DEV) console.debug('[sam]', event)
+  if (import.meta.env.DEV) console.debug('[som]', event)
 }
 ```

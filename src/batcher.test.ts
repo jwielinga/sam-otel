@@ -120,7 +120,7 @@ describe('LogBatcher', () => {
     const queued = batcher.add('queued')
 
     await expect(batcher.add('rejected')).rejects.toThrow(
-      'SamLogger batch queue is full.',
+      'SomLogger batch queue is full.',
     )
 
     release()
@@ -174,7 +174,7 @@ describe('overflowStrategy', () => {
     const newest = batcher.add('newest')
 
     await expect(oldest).rejects.toThrow(
-      'SamLogger batch queue is full; oldest record dropped.',
+      'SomLogger batch queue is full; oldest record dropped.',
     )
     release()
     await Promise.all([inFlight, kept, newest])
@@ -196,7 +196,7 @@ describe('overflowStrategy', () => {
     const queued = batcher.add('queued')
 
     await expect(batcher.add('rejected')).rejects.toThrow(
-      'SamLogger batch queue is full.',
+      'SomLogger batch queue is full.',
     )
     release()
     await Promise.all([inFlight, queued])

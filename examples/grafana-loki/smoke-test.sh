@@ -3,19 +3,19 @@ set -eu
 
 alloy_url=${ALLOY_URL:-http://localhost:4318}
 loki_url=${LOKI_URL:-http://localhost:3100}
-marker="sam-compose-smoke-$(date +%s)-$$"
+marker="som-compose-smoke-$(date +%s)-$$"
 timestamp_ns=$(($(date +%s) * 1000000000))
 start_seconds=$((timestamp_ns / 1000000000))
 end_seconds=$((start_seconds + 60))
 
-payload=$(printf '{"resourceLogs":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"sam-compose-smoke"}}]},"scopeLogs":[{"scope":{"name":"smoke-test"},"logRecords":[{"timeUnixNano":"%s","observedTimeUnixNano":"%s","severityNumber":9,"severityText":"INFO","body":{"stringValue":"%s"},"attributes":[]}]}]}]}' "$timestamp_ns" "$timestamp_ns" "$marker")
+payload=$(printf '{"resourceLogs":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"som-compose-smoke"}}]},"scopeLogs":[{"scope":{"name":"smoke-test"},"logRecords":[{"timeUnixNano":"%s","observedTimeUnixNano":"%s","severityNumber":9,"severityText":"INFO","body":{"stringValue":"%s"},"attributes":[]}]}]}]}' "$timestamp_ns" "$timestamp_ns" "$marker")
 
 curl --fail --silent --show-error \
   -H 'Content-Type: application/json' \
   --data "$payload" \
   "${alloy_url%/}/v1/logs" >/dev/null
 
-query="{service_name=\"sam-compose-smoke\"} |= \"$marker\""
+query="{service_name=\"som-compose-smoke\"} |= \"$marker\""
 attempt=0
 while [ "$attempt" -lt 30 ]; do
   response=$(curl --fail --silent --show-error --get \

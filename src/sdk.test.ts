@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSamLogger } from './sdk.js'
+import { createSomLogger } from './sdk.js'
 import { OTelSeverityNumber } from './otel.types.js'
-import type { SamLoggerOptions } from './sdk.types.js'
+import type { SomLoggerOptions } from './sdk.types.js'
 import { FakeCollector } from './test-support/fake-collector.js'
 import { stubFetchKeepalive } from './test-support/keepalive.js'
 
@@ -9,9 +9,9 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function setup(options: Partial<SamLoggerOptions> = {}) {
+function setup(options: Partial<SomLoggerOptions> = {}) {
   const collector = new FakeCollector()
-  const logger = createSamLogger({
+  const logger = createSomLogger({
     endpoint: 'https://collector.example/v1/logs',
     serviceName: 'checkout',
     fetcher: collector.fetcher,
@@ -140,13 +140,13 @@ describe('SDK factory', () => {
     vi.stubGlobal('fetch', undefined)
 
     expect(() =>
-      createSamLogger({ endpoint: '/v1/logs', serviceName: 'checkout' }),
+      createSomLogger({ endpoint: '/v1/logs', serviceName: 'checkout' }),
     ).toThrow('fetch is not available in this environment')
   })
 
   describe('keepalive', () => {
     async function sentWithKeepalive(
-      options: Partial<SamLoggerOptions>,
+      options: Partial<SomLoggerOptions>,
     ): Promise<boolean | undefined> {
       const { logger, collector } = setup(options)
       await logger.info('unload test')
