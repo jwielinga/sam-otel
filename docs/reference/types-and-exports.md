@@ -72,7 +72,9 @@ These mirror the OpenTelemetry logs data model and are exported for `logRecord()
 | `OTelLogRecord`                                                | The record accepted by `logRecord()`.                                                            |
 | `OTelApplicationLog`, `OTelEvent`, `OTelSimpleLog`             | Narrowed `OTelLogRecord` shapes.                                                                 |
 | `OTelAnyValue`, `OTelAttributes`                               | The value model.                                                                                 |
-| `OTelResource`, `OTelInstrumentationScope`                     | Resource and scope.                                                                              |
+| `OTelResource`, `OTelEntityRef`, `OTelInstrumentationScope`    | Resource, entity reference, and scope.                                                           |
+| `OTelLogs`, `OTelExportLogsServiceRequest`                     | Array of records, and alias of `OTelLogsData`.                                                   |
+| `OTelLogRecordFlagsValue`                                      | Type of a log record flags value (`number`).                                                     |
 | `OTelScopeLogs`, `OTelResourceLogs`, `OTelLogsData`            | Request structure with native types (`bigint` timestamps).                                       |
 | `OTelJson…` types                                              | The same structure in its JSON wire form (string timestamps, `stringValue`/`intValue` wrappers). |
 | `OTelTraceId`, `OTelSpanId`, `OTelTraceFlags`, `OTelTimestamp` | Aliases for ids, flags, and timestamps.                                                          |

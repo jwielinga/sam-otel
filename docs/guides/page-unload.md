@@ -12,7 +12,7 @@ When a user closes a tab or navigates away, a normal request can be cancelled be
 In a browser, Som registers listeners when you create the logger:
 
 - `pagehide`, when the page is being unloaded or put in the back/forward cache.
-- `visibilitychange`, when the page becomes hidden (tab switch, minimize, app switch on mobile).
+- `visibilitychange`, when the page becomes hidden (tab switch, minimize, app switch on mobile). Becoming visible again does not flush.
 
 When either fires, Som sends everything queued **immediately**:
 
@@ -40,7 +40,7 @@ Som only sets the flag when the browser supports it. Otherwise it sends plain re
 ### Browser limits
 
 - **Support.** Browsers without Fetch `keepalive` (for example Firefox before 133, and very old Chrome and Safari) ignore the flag. Som detects this and sends normal requests, so unload delivery is not guaranteed there.
-- **Size.** Browsers cap in-flight keepalive request bodies at 64 KiB. Som stays below it: it omits the flag for a larger normal batch, and it splits unload batches. A single record that alone exceeds the limit is sent without `keepalive`.
+- **Size.** Browsers cap in-flight keepalive request bodies at 64 KiB. Som stays below it, using a 63 KiB limit: it omits the flag for a larger normal batch, and it splits unload batches. A single record that alone exceeds the limit is sent without `keepalive`.
 - **Preflight.** Keepalive requests with custom headers such as `Authorization` trigger a CORS preflight. The collector must answer it, and the browser may not finish the preflight if the page is already closing. Avoid custom headers if unload delivery matters.
 
 :::info About `Connection: keep-alive`

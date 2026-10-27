@@ -23,5 +23,5 @@ With `compression: 'gzip'` Som compresses each request body with the browser's `
 - **CORS.** `Content-Encoding` becomes a request header, so your CORS configuration must allow it. See [Collector setup](./collector-setup.md).
 - **Fallback.** Where `CompressionStream` does not exist, Som sends the body uncompressed rather than failing.
 - **Page unload.** Unload flushes are never compressed, because compression is asynchronous and the page may be gone. See [Page unload](./page-unload.md).
-- **Keepalive size.** Som checks the 64 KiB keepalive limit against the **compressed** size, so compression lets more records use `keepalive` in normal sends.
+- **Keepalive size.** Som checks its 63 KiB keepalive limit (under the browser's 64 KiB cap) against the **compressed** size, so compression lets more records use `keepalive` in normal sends.
 - **Small batches.** Tiny bodies gain little. Compression pays off with larger batches or long messages.
